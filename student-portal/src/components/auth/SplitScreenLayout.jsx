@@ -79,10 +79,10 @@ export default function SplitScreenLayout({ children, role = 'student' }) {
       </div>
 
       {/* Illustration Side (50% Width) - Lavender Purple Background for Student and Admin */}
-      <div className={`hidden lg:flex lg:w-1/2 relative ${(role === 'student' || role === 'admin') ? 'bg-[#9162F5]' : THEMES[role].bgOuter} overflow-hidden items-center justify-center p-8`}>
+      <div className={`hidden lg:flex lg:w-1/2 relative ${(role === 'student' || role === 'admin') ? 'bg-[#9162F5]' : THEMES[role].bgInner} overflow-hidden items-center justify-center`}>
         
-        {/* Large Inner Card */}
-        <div className={`relative w-full h-full max-h-[900px] rounded-3xl ${(role === 'student' || role === 'admin') ? 'bg-[#9162F5]' : THEMES[role].bgInner} shadow-2xl overflow-hidden flex flex-col`}>
+        {/* Full Bleed Inner Container */}
+        <div className="relative w-full h-full overflow-hidden flex flex-col">
           
           {/* Abstract Organic Blobs */}
           <motion.div 
