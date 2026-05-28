@@ -53,7 +53,7 @@ const THEMES = {
   }
 };
 
-import StudentLoginIllustration from './StudentLoginIllustration';
+import Image from 'next/image';
 
 export default function SplitScreenLayout({ children, role = 'student' }) {
   const [currentSlide, setCurrentSlide] = useState(0);
@@ -103,7 +103,7 @@ export default function SplitScreenLayout({ children, role = 'student' }) {
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 1.2, ease: [0.16, 1, 0.3, 1] }}
-                className="w-full max-w-[480px] flex flex-col items-center"
+                className="w-full max-w-[500px] flex flex-col items-center"
               >
                 {/* Large Bold Title */}
                 <h2 className="text-4xl lg:text-5xl font-bold text-white mb-3 tracking-tight">
@@ -114,9 +114,16 @@ export default function SplitScreenLayout({ children, role = 'student' }) {
                   Login to access your account
                 </p>
 
-                {/* Minimalist Line-Art Illustration */}
-                <div className="w-full flex justify-center items-center">
-                  <StudentLoginIllustration />
+                {/* Proper High-End Illustration */}
+                <div className="w-full flex justify-center items-center mt-4">
+                  <Image 
+                    src="/images/student_illustration.png" 
+                    alt="Student Portal Illustration" 
+                    width={600} 
+                    height={400} 
+                    className="w-full h-auto object-contain drop-shadow-2xl rounded-2xl"
+                    priority
+                  />
                 </div>
               </motion.div>
             ) : (
