@@ -87,5 +87,4 @@ npx convex run reset:makeAdmin
 ```
 3. Refresh the telemetry dashboard. The **Mainframe Admin Portal** will now be visible in your sidebar array.
 
----
-_CRAFTED_BY // < ALLEN & KASHINADTH >_
+
