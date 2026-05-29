@@ -60,5 +60,5 @@ export default defineSchema({
     content: v.optional(v.string()),
     status: v.string(), // "Pending Review", "Approved", "Needs Revision"
     submittedAt: v.number(),
-  }).index("by_userId", ["userId"]).index("by_dayId", ["dayId"]),
+  }).index("by_userId", ["userId"]).index("by_dayId", ["dayId"]).index("by_userId_dayId", ["userId", "dayId"]),
 });

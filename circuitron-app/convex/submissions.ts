@@ -41,3 +41,29 @@ export const updateStatus = mutation({
     await ctx.db.patch(args.submissionId, { status: args.status });
   },
 });
+
+export const submitTask = mutation({
+  args: { dayId: v.id("days"), link: v.string() },
+  handler: async (ctx, args) => {
+    const userId = await auth.getUserId(ctx);
+    if (!userId) throw new Error("Unauthorized");
+    
+    // Check if already submitted
+    const existing = await ctx.db
+      .query("submissions")
+      .withIndex("by_userId_dayId", (q) => q.eq("userId", userId).eq("dayId", args.dayId))
+      .first();
+      
+    if (existing) {
+      await ctx.db.patch(existing._id, { link: args.link, submittedAt: Date.now(), status: "Pending Review" });
+    } else {
+      await ctx.db.insert("submissions", {
+        userId,
+        dayId: args.dayId,
+        link: args.link,
+        status: "Pending Review",
+        submittedAt: Date.now()
+      });
+    }
+  },
+});

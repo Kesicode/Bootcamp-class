@@ -24,8 +24,15 @@ export const getDays = query({
     if (!args.weekId) return [];
     return await ctx.db
       .query("days")
-      .withIndex("by_weekId", (q) => q.eq("weekId", args.weekId))
+      .withIndex("by_weekId", (q) => q.eq("weekId", args.weekId!))
       .collect();
+  },
+});
+
+export const getDay = query({
+  args: { dayId: v.id("days") },
+  handler: async (ctx, args) => {
+    return await ctx.db.get(args.dayId);
   },
 });
 

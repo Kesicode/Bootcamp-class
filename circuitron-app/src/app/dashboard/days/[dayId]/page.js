@@ -1,17 +1,37 @@
-"use client";
-
-import { useQuery } from "convex/react";
+import { useQuery, useMutation } from "convex/react";
 import { api } from "../../../../../convex/_generated/api";
 import { useParams, useRouter } from "next/navigation";
-import { ArrowLeft, PlayCircle, Code, FileText } from "lucide-react";
+import { ArrowLeft, PlayCircle, Code, FileText, CheckCircle2 } from "lucide-react";
 import Link from "next/link";
+import { useState } from "react";
 
 export default function DayViewerPage() {
   const params = useParams();
   const dayId = params.dayId;
   
-  // Need to fetch specific day details here. We don't have a `getDay` query yet!
-  // This is a placeholder UI.
+  const day = useQuery(api.content.getDay, { dayId });
+  const submitTask = useMutation(api.submissions.submitTask);
+  
+  const [link, setLink] = useState("");
+  const [submitting, setSubmitting] = useState(false);
+  const [success, setSuccess] = useState(false);
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    if (!link) return;
+    setSubmitting(true);
+    try {
+      await submitTask({ dayId, link });
+      setSuccess(true);
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  if (day === undefined) return <div className="p-8 text-white">Loading Day Details...</div>;
+  if (!day) return <div className="p-8 text-white">Day not found.</div>;
 
   return (
     <div className="max-w-5xl mx-auto">
@@ -28,14 +48,14 @@ export default function DayViewerPage() {
               <PlayCircle size={64} className="text-white/50 group-hover:text-white transition-transform group-hover:scale-110 z-20" />
               <div className="absolute bottom-6 left-6 z-20">
                 <div className="text-sm font-semibold text-white/80 uppercase tracking-wider mb-1">Video Lesson</div>
-                <div className="text-xl font-bold">Introduction to Convex</div>
+                <div className="text-xl font-bold">{day.videoTitle || day.title}</div>
               </div>
            </div>
            
            <div className="bg-[#121214] p-6 border border-white/10 rounded-2xl">
              <h3 className="text-xl font-semibold flex items-center gap-2 mb-4"><FileText size={20} /> Description & Task</h3>
-             <p className="text-white/70 leading-relaxed">
-               This is where the detailed markdown description for the day will be injected.
+             <p className="text-white/70 leading-relaxed whitespace-pre-wrap">
+               {day.description || day.taskDescription || "No description provided for this day."}
              </p>
            </div>
         </div>
@@ -43,11 +63,34 @@ export default function DayViewerPage() {
         <div className="space-y-6">
           <div className="bg-[#121214] p-6 border border-white/10 rounded-2xl">
              <h3 className="text-xl font-semibold flex items-center gap-2 mb-4"><Code size={20} /> Submission</h3>
-             <p className="text-sm text-white/60 mb-6">Submit your work link below to complete this day.</p>
-             <input type="url" placeholder="https://github.com/..." className="w-full bg-black border border-white/20 rounded-lg p-3 text-sm outline-none focus:border-white transition-colors mb-4" />
-             <button className="w-full bg-white text-black font-semibold rounded-lg py-3 hover:bg-white/90 transition-colors">
-               Submit Task
-             </button>
+             {success ? (
+               <div className="p-4 bg-emerald-500/10 border border-emerald-500/20 rounded-xl text-emerald-400 flex items-center gap-3">
+                 <CheckCircle2 size={24} />
+                 <div>
+                   <div className="font-semibold text-sm">Successfully Submitted!</div>
+                   <div className="text-xs opacity-80">Pending review from admins.</div>
+                 </div>
+               </div>
+             ) : (
+               <form onSubmit={handleSubmit}>
+                 <p className="text-sm text-white/60 mb-6">Submit your work link below to complete this day.</p>
+                 <input 
+                   type="url" 
+                   value={link}
+                   onChange={(e) => setLink(e.target.value)}
+                   required
+                   placeholder="https://github.com/..." 
+                   className="w-full bg-black border border-white/20 rounded-lg p-3 text-sm outline-none focus:border-white transition-colors mb-4 text-white" 
+                 />
+                 <button 
+                   type="submit"
+                   disabled={submitting}
+                   className="w-full bg-white text-black font-semibold rounded-lg py-3 hover:bg-white/90 transition-colors disabled:opacity-70"
+                 >
+                   {submitting ? "Submitting..." : "Submit Task"}
+                 </button>
+               </form>
+             )}
           </div>
         </div>
       </div>
