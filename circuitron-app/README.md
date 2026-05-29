@@ -1,88 +1,91 @@
-# Circuitron Bootcamp Platform
+# CIRCUITRON // COGNITIVE INTEGRATED MAINBOARD
 
-Welcome to the **Circuitron Bootcamp Platform**! This application was built to provide a structured, gamified learning experience for students while offering a robust Content Management System (CMS) for administrators.
+Welcome to **CIRCUITRON**, an uncompromising, tactile learning system configured to launch minds into architectural logic. Built for hardware engineering sprints, logical circuit debugging, and intellectual conquest, Circuitron merges raw mechanical aesthetics with a high-performance modern web stack.
 
-The project is built using modern web technologies:
-- **Next.js 14 (App Router)** for the frontend framework.
-- **Convex** for the real-time database and backend logic.
-- **@convex-dev/auth** for secure, role-based authentication.
-- **TailwindCSS & Framer Motion** for beautiful, animated UI/UX.
-
----
-
-## 👥 User Roles & Capabilities
-
-The platform operates on a strict Role-Based Access Control (RBAC) system.
-
-### 1. Student (`student`)
-The default role assigned upon signup.
-- **Dashboard (`/dashboard`)**: A gamified command center tracking Streaks, Tasks Completed, and Watch Time. Features a real-time Leaderboard.
-- **Roadmap (`/dashboard/days`)**: The central curriculum tree showing unlocked Weeks and Days.
-- **Learning Interface (`/dashboard/days/[dayId]`)**: The module where students watch embedded YouTube videos, read Markdown task requirements, and submit their work.
-- **Quiz Engine (`/dashboard/days/[dayId]/quiz`)**: An interactive Multiple Choice Quiz that must be passed to proceed.
-
-### 2. Volunteer / Mentor (`volunteer`)
-A helper role designed to assist admins in grading.
-- **Permissions**: They have the same backend permissions as Admins to grade student submissions (`Approve` or `Needs Revision`).
-- *(Note: To grade submissions, volunteers currently utilize backend API routes or custom UI components, as the main Admin Portal is strictly locked to Admins to prevent curriculum tampering).*
-
-### 3. Administrator (`admin`)
-The platform owners who manage curriculum and users.
-- **Admin Portal (`/admin`)**: The central hub for platform management.
-- **Curriculum Manager (`/admin/content`)**: 
-  - Create and manage Bootcamp "Weeks".
-  - Create "Days" (learning modules).
-  - Use the **DayEditor** to dynamically attach YouTube URLs, write Markdown tasks, and build custom quizzes.
-- **User Manager (`/admin/users`)**: 
-  - View all registered users.
-  - Instantly promote a Student to a Volunteer or Admin with live visual feedback.
-- **Review Center (`/admin/submissions`)**: 
-  - View all student task submissions.
-  - Grade submissions by marking them as **Approved** or **Needs Revision**.
+The platform is engineered using a robust technical stack:
+- **Next.js 14 (App Router)** // Primary Cognitive Interface
+- **Convex** // Real-time Synchronization & Data Architecture
+- **@convex-dev/auth** // Secure, Role-Based Access Control
+- **Tailwind v4 & Framer Motion** // High-Fidelity UI & Telemetry Animations
 
 ---
 
-## 🏗️ System Architecture
+## ⚙️ SYSTEM ROLES & ACCESS HIERARCHY
 
-The project strictly separates the Backend (`convex/`) from the Frontend (`src/`).
+The platform enforces strict Role-Based Access Control (RBAC) to govern the learning architecture.
 
-### Backend (`convex/`)
-Handles all database operations securely on the server.
-- `schema.ts`: Defines the strict relational schema for Users, Weeks, Days, Progress, and Submissions.
-- `auth.ts`: Configures the authentication providers (Email/Password).
-- `content.ts`: Mutations for creating and editing the curriculum (Requires Admin).
-- `submissions.ts`: Mutations for grading students (Requires Admin or Volunteer).
+### 01 // INITIATE (`student`)
+The standard operational tier assigned upon secure authentication.
+- **Cognitive Vault (`/dashboard`)**: A terminal command center tracking structural progression, node processing limits, and a real-time leaderboard for architectural supremacy.
+- **Architectural Roadmap (`/dashboard/days`)**: The central blueprint revealing operational nodes and daily logic sprints.
+- **Execution Terminal (`/dashboard/days/[dayId]`)**: The active interface where initiates analyze telemetry feeds (video), process raw architectural data (Markdown tasks), and upload logic states (submissions).
+- **Validation Engine (`/dashboard/days/[dayId]/quiz`)**: Interactive, granular evaluation tests that must be stabilized to proceed.
 
-### Frontend (`src/`)
-Handles UI rendering and state.
-- `app/admin/`: Protected routes for the Admin CMS.
-- `app/dashboard/`: Protected routes for the Student LMS.
-- `components/`: Reusable UI components (like the `DayEditor` or `AdminPortalLink`).
+### 02 // LOGIC MENTOR (`volunteer`)
+An elevated operational tier designated for code review and structural optimization.
+- **Clearance Level**: Matches core administrative layers for grading node submissions, returning verdicts of `VERIFIED_STABLE` (Approved) or `NEEDS_RECALIBRATION` (Revision).
+- *(Note: Access relies strictly on backend telemetry and isolated grading paths to ensure the core curriculum blueprint remains tamper-proof).*
+
+### 03 // MAINFRAME ADMINISTRATOR (`admin`)
+The root-level engineers who configure the architectural matrix and govern the entire platform.
+- **Control Interface (`/admin`)**: The central nexus for platform diagnostics.
+- **Curriculum Architecture (`/admin/content`)**: 
+  - Synthesize and compile Bootcamp "Operational Weeks".
+  - Instantiate "Nodes" (Daily Learning modules).
+  - Utilize the **Schematic Editor** to inject video coordinates, draft complex markdown schematics, and compile validation quizzes.
+- **User Node Management (`/admin/users`)**: 
+  - Trace all authenticated operatives.
+  - Dynamically elevate an Initiate to a Mentor or Admin with immediate system feedback.
+- **Quality Assurance Review (`/admin/submissions`)**: 
+  - Analyze raw output strings submitted by initiates.
+  - Grade outputs as **OPTIMIZED** or **NEEDS_DEBUGGING**.
 
 ---
 
-## 🚀 Getting Started
+## 🏗️ HARDWARE ARCHITECTURE (CODEBASE)
 
-### 1. Running the Application
-To run the platform locally, you need two terminals:
+The matrix cleanly segregates the Backend Processing (`convex/`) from the Frontend Visualizer (`src/`).
 
-**Terminal 1 (Backend - Convex):**
+### BACKEND MAINFRAME (`convex/`)
+Handles all distributed processing and state persistence.
+- `schema.ts`: The strict relational architecture mapping Users, Sequences, Nodes, Memory states, and Input logs.
+- `auth.ts`: Authentication relay configuring cryptographic handshakes.
+- `content.ts`: Write protocols for editing the master blueprint (Root Access Required).
+- `submissions.ts`: Quality control mutations for evaluating operative performance (Root/Mentor Access Required).
+
+### FRONTEND VISUALIZER (`src/`)
+Compiles UI topology and telemetry dashboards.
+- `app/admin/`: Shielded routes for the Mainframe Control Interface.
+- `app/dashboard/`: Shielded routes for the Initiate Cognitive Vault.
+- `components/`: Modular, reusable hardware components (e.g., `AppSidebar`, `AdminPortalLink`, and schematic visualization elements).
+
+---
+
+## 🚀 INITIALIZATION PROTOCOL
+
+### 1. Booting the Mainframe
+To boot the system locally, engage two parallel terminal threads:
+
+**THREAD 01 (Database Engine - Convex):**
 ```bash
 npx convex dev
 ```
 
-**Terminal 2 (Frontend - Next.js):**
+**THREAD 02 (Client Visualizer - Next.js):**
 ```bash
 npm run dev
 ```
 
-The application will be available at `http://localhost:3000`.
+The graphical user interface will mount at `http://localhost:3000`.
 
-### 2. Creating an Admin Account
-Because of intense password hashing, you cannot manually inject passwords into the database. To set up your first Admin:
-1. Open `http://localhost:3000` and Sign Up with your email (e.g., `admin@circuitevent`).
-2. Open your terminal and run the reset helper script to elevate the first created user:
+### 2. Elevating to Root Access (Admin Creation)
+Due to strict cryptographic hashing, external state injection is prohibited. To configure your initial Root user:
+1. Navigate to `http://localhost:3000/login` and execute standard authorization (e.g., `admin@circuitron.io`).
+2. Target your terminal and execute the backend override script to elevate your specific ID:
 ```bash
 npx convex run reset:makeAdmin
 ```
-3. Refresh the page! You will now see the **Admin Portal** button in your sidebar.
+3. Refresh the telemetry dashboard. The **Mainframe Admin Portal** will now be visible in your sidebar array.
+
+---
+_CRAFTED_BY // < ALLEN & KASHINADTH >_
