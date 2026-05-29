@@ -140,3 +140,65 @@ export const upsertQuiz = mutation({
     }
   },
 });
+
+/**
+ * Returns aggregated progress stats for the current user:
+ *   totalDays, completedDays, submittedDays, approvedDays.
+ * Used to drive the real progress bars on the dashboard.
+ */
+export const getMyProgress = query({
+  args: {},
+  handler: async (ctx) => {
+    const userId = await auth.getUserId(ctx);
+    if (!userId) return null;
+
+    const allDays = await ctx.db.query("days").collect();
+    const mySubmissions = await ctx.db
+      .query("submissions")
+      .withIndex("by_userId", (q) => q.eq("userId", userId))
+      .collect();
+
+    const myProgress = await ctx.db
+      .query("userProgress")
+      .withIndex("by_userId", (q) => q.eq("userId", userId))
+      .collect();
+
+    const totalDays = allDays.filter((d) => !d.deleted).length;
+    const submittedDays = mySubmissions.length;
+    const approvedDays = mySubmissions.filter((s) => s.status === "Approved").length;
+    const quizCompleted = myProgress.filter((p) => p.quizCompleted).length;
+
+    return { totalDays, submittedDays, approvedDays, quizCompleted };
+  },
+});
+
+/**
+ * Marks a quiz as completed for the current user in userProgress.
+ * Upserts so re-taking the quiz doesn't create duplicate rows.
+ */
+export const saveQuizResult = mutation({
+  args: { dayId: v.id("days"), score: v.number(), total: v.number() },
+  handler: async (ctx, args) => {
+    const userId = await auth.getUserId(ctx);
+    if (!userId) throw new Error("Unauthorized");
+
+    const existing = await ctx.db
+      .query("userProgress")
+      .withIndex("by_userId_dayId", (q) => q.eq("userId", userId).eq("dayId", args.dayId))
+      .first();
+
+    if (existing) {
+      await ctx.db.patch(existing._id, { quizCompleted: true });
+    } else {
+      await ctx.db.insert("userProgress", {
+        userId,
+        dayId: args.dayId,
+        videoCompleted: false,
+        quizCompleted: true,
+        submissionCompleted: false,
+        overallCompleted: false,
+        videoWatchPercent: 0,
+      });
+    }
+  },
+});

@@ -2,120 +2,275 @@
 
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { ArrowLeft, CheckCircle2, XCircle } from "lucide-react";
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
-
-import { useQuery } from "convex/react";
+import { useQuery, useMutation } from "convex/react";
 import { api } from "../../../../../../convex/_generated/api";
 
+/**
+ * Purpose:
+ *   Interactive quiz page. Loads real questions from the Convex quizzes
+ *   table. Tracks per-question selection, reveals correct/wrong answer
+ *   after each pick, accumulates score, and at the end saves the result
+ *   via saveQuizResult mutation then redirects back to the day page.
+ */
 export default function QuizPage() {
   const params = useParams();
   const router = useRouter();
+  const dayId = params.dayId;
   
-  const quiz = useQuery(api.content.getQuiz, { dayId: params.dayId });
+  const quiz = useQuery(api.content.getQuiz, { dayId });
+  const saveQuizResult = useMutation(api.content.saveQuizResult);
 
   const [currentIndex, setCurrentIndex] = useState(0);
   const [selected, setSelected] = useState(null);
-  const [showResult, setShowResult] = useState(false);
+  const [answered, setAnswered] = useState(false);
   const [score, setScore] = useState(0);
+  const [finished, setFinished] = useState(false);
+  const [saving, setSaving] = useState(false);
 
-  if (quiz === undefined) return <div className="p-12 text-center text-white/50">Loading quiz...</div>;
+  // ── Loading ──
+  if (quiz === undefined) return (
+    <div className="flex items-center justify-center min-h-[50vh]">
+      <p className="font-mono text-[10px] tracking-widest text-black/25 uppercase animate-pulse">
+        LOADING_QUIZ...
+      </p>
+    </div>
+  );
+
+  // ── No quiz ──
   if (!quiz || !quiz.questions || quiz.questions.length === 0) {
     return (
-      <div className="max-w-3xl mx-auto py-12 text-center">
-        <div className="text-white/50 mb-4">No quiz available for this day.</div>
-        <Link href={`/dashboard/days/${params.dayId}`} className="bg-white text-black px-6 py-2 rounded-xl font-bold">
-          Go Back
+      <div className="max-w-2xl mx-auto py-20 text-center">
+        <p className="font-mono text-[10px] tracking-widest text-black/25 uppercase mb-8">
+          NO_QUIZ_AVAILABLE // CHECK BACK LATER
+        </p>
+        <Link
+          href={`/dashboard/days/${dayId}`}
+          className="inline-flex items-center gap-2 font-mono text-[10px] uppercase tracking-wider px-6 py-3 rounded-lg bg-black text-white hover:bg-black/80 transition-colors"
+        >
+          <svg className="w-3.5 h-3.5" viewBox="0 0 16 16" fill="none">
+            <path d="M10 3L5 8l5 5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+          </svg>
+          BACK_TO_LESSON
         </Link>
       </div>
     );
   }
 
-  const currentQuestion = quiz.questions[currentIndex];
-  const isLast = currentIndex === quiz.questions.length - 1;
+  const questions = quiz.questions;
+  const total = questions.length;
+  const current = questions[currentIndex];
+  const isLast = currentIndex === total - 1;
+  const progress = ((currentIndex) / total) * 100;
 
-  const handleSelect = (idx) => {
-    if (showResult) return;
-    setSelected(idx);
-    setShowResult(true);
-    if (idx === currentQuestion.answerIndex) {
-      setScore(score + 1);
-    }
+  const handleSelect = (optIdx) => {
+    if (answered) return;
+    setSelected(optIdx);
+    setAnswered(true);
+    if (optIdx === current.answerIndex) setScore((s) => s + 1);
   };
 
-  const nextQuestion = () => {
+  const handleNext = async () => {
     if (isLast) {
-      // In real app, call a Convex mutation here to save quiz progress
-      router.push(`/dashboard/days/${params.dayId}`);
+      setSaving(true);
+      const finalScore = selected === current.answerIndex ? score + 1 : score;
+      try {
+        await saveQuizResult({ dayId, score: finalScore, total });
+      } catch (e) {
+        console.error(e);
+      }
+      setFinished(true);
+      setSaving(false);
     } else {
-      setCurrentIndex(currentIndex + 1);
+      setCurrentIndex((i) => i + 1);
       setSelected(null);
-      setShowResult(false);
+      setAnswered(false);
     }
   };
 
+  // ── Finished screen ──
+  if (finished) {
+    const finalScore = score;
+    const pct = Math.round((finalScore / total) * 100);
+    return (
+      <div className="max-w-2xl mx-auto py-12">
+        <Link
+          href={`/dashboard/days/${dayId}`}
+          className="inline-flex items-center gap-2 font-mono text-[10px] uppercase tracking-wider text-black/30 hover:text-black transition-colors mb-10"
+        >
+          <svg className="w-3.5 h-3.5" viewBox="0 0 16 16" fill="none">
+            <path d="M10 3L5 8l5 5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+          </svg>
+          BACK_TO_LESSON
+        </Link>
+
+        <motion.div
+          initial={{ opacity: 0, scale: 0.95 }}
+          animate={{ opacity: 1, scale: 1 }}
+          transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
+          className="border border-black/[0.06] rounded-xl p-10 bg-[#F8F9FA] text-center"
+        >
+          <p className="font-mono text-[10px] tracking-[0.3em] text-black/30 uppercase mb-4">QUIZ_COMPLETE</p>
+          
+          {/* Score ring */}
+          <div className="relative w-32 h-32 mx-auto mb-8">
+            <svg className="w-32 h-32 -rotate-90" viewBox="0 0 120 120">
+              <circle cx="60" cy="60" r="52" fill="none" stroke="#f0f0f0" strokeWidth="8"/>
+              <motion.circle
+                cx="60" cy="60" r="52" fill="none"
+                stroke={pct >= 70 ? "#16a34a" : pct >= 40 ? "#ca8a04" : "#dc2626"}
+                strokeWidth="8"
+                strokeLinecap="round"
+                strokeDasharray={`${2 * Math.PI * 52}`}
+                initial={{ strokeDashoffset: 2 * Math.PI * 52 }}
+                animate={{ strokeDashoffset: 2 * Math.PI * 52 * (1 - pct / 100) }}
+                transition={{ duration: 1.2, ease: [0.16, 1, 0.3, 1] }}
+              />
+            </svg>
+            <div className="absolute inset-0 flex flex-col items-center justify-center">
+              <span className="font-display font-black text-3xl tracking-tighter text-black leading-none">{pct}%</span>
+              <span className="font-mono text-[9px] text-black/30 uppercase tracking-wider">{finalScore}/{total}</span>
+            </div>
+          </div>
+
+          <h2 className="font-display font-black text-2xl tracking-tighter uppercase text-black mb-2">
+            {pct >= 70 ? "Excellent Work." : pct >= 40 ? "Good Effort." : "Keep Studying."}
+          </h2>
+          <p className="font-mono text-sm text-black/40 mb-8">
+            You answered {finalScore} out of {total} questions correctly.
+          </p>
+
+          <div className="flex gap-3 justify-center">
+            <Link
+              href={`/dashboard/days/${dayId}`}
+              className="font-mono text-[10px] uppercase tracking-wider px-6 py-3 rounded-lg bg-black text-white hover:bg-black/80 transition-colors"
+            >
+              BACK_TO_LESSON
+            </Link>
+            <button
+              onClick={() => { setCurrentIndex(0); setSelected(null); setAnswered(false); setScore(0); setFinished(false); }}
+              className="font-mono text-[10px] uppercase tracking-wider px-6 py-3 rounded-lg border border-black/[0.12] hover:bg-black/5 transition-colors"
+            >
+              RETRY_QUIZ
+            </button>
+          </div>
+        </motion.div>
+      </div>
+    );
+  }
+
+  // ── Quiz in progress ──
   return (
-    <div className="max-w-3xl mx-auto py-12">
-      <Link href={`/dashboard/days/${params.dayId}`} className="inline-flex items-center gap-2 text-white/50 hover:text-white transition-colors mb-8 text-sm">
-        <ArrowLeft size={16} /> Back to Lesson
+    <div className="max-w-2xl mx-auto py-10">
+      
+      {/* Back */}
+      <Link
+        href={`/dashboard/days/${dayId}`}
+        className="inline-flex items-center gap-2 font-mono text-[10px] uppercase tracking-wider text-black/30 hover:text-black transition-colors mb-8"
+      >
+        <svg className="w-3.5 h-3.5" viewBox="0 0 16 16" fill="none">
+          <path d="M10 3L5 8l5 5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+        </svg>
+        BACK_TO_LESSON
       </Link>
 
-      <div className="mb-8 flex justify-between items-center text-sm font-semibold text-white/50">
-        <span>Question {currentIndex + 1} of {quiz.questions.length}</span>
-        <span>Score: {score}</span>
+      {/* Progress bar */}
+      <div className="mb-8">
+        <div className="flex justify-between items-baseline mb-2">
+          <span className="font-mono text-[9px] tracking-[0.3em] text-black/30 uppercase">
+            QUESTION_{String(currentIndex + 1).padStart(2, "0")}_OF_{String(total).padStart(2, "0")}
+          </span>
+          <span className="font-display font-black text-lg text-black">{score} pts</span>
+        </div>
+        <div className="h-[2px] w-full bg-black/5 rounded-full overflow-hidden">
+          <motion.div
+            animate={{ width: `${progress}%` }}
+            transition={{ duration: 0.4, ease: "easeOut" }}
+            className="h-full bg-black rounded-full"
+          />
+        </div>
       </div>
 
+      {/* Question card */}
       <AnimatePresence mode="wait">
         <motion.div
           key={currentIndex}
-          initial={{ opacity: 0, x: 20 }}
+          initial={{ opacity: 0, x: 30 }}
           animate={{ opacity: 1, x: 0 }}
-          exit={{ opacity: 0, x: -20 }}
-          className="bg-white/5 backdrop-blur-xl border border-white/10 rounded-3xl p-8 md:p-12 shadow-2xl"
+          exit={{ opacity: 0, x: -30 }}
+          transition={{ duration: 0.3, ease: [0.16, 1, 0.3, 1] }}
+          className="border border-black/[0.06] rounded-xl p-8 bg-white"
         >
-          <h2 className="text-2xl md:text-3xl font-bold mb-8 leading-relaxed">
-            {currentQuestion.question}
+          <p className="font-mono text-[9px] tracking-[0.3em] text-black/25 uppercase mb-4">QUESTION</p>
+          <h2 className="font-display font-black text-2xl tracking-tight text-black mb-8 leading-snug">
+            {current.question}
           </h2>
 
-          <div className="space-y-4">
-            {currentQuestion.options.map((opt, idx) => {
-              const isCorrect = showResult && idx === currentQuestion.answerIndex;
-              const isWrong = showResult && selected === idx && idx !== currentQuestion.answerIndex;
-              
-              let bgClass = "bg-black/50 border-white/10 hover:border-white/30";
-              if (isCorrect) bgClass = "bg-emerald-500/20 border-emerald-500/50 text-emerald-400";
-              if (isWrong) bgClass = "bg-red-500/20 border-red-500/50 text-red-400";
+          <div className="space-y-3">
+            {current.options.map((opt, idx) => {
+              const isCorrect = answered && idx === current.answerIndex;
+              const isWrong = answered && selected === idx && idx !== current.answerIndex;
+              const isSelected = selected === idx;
+
+              let cls = "border-black/[0.08] bg-[#F8F9FA] hover:border-black/20 hover:bg-white text-black/70";
+              if (isCorrect) cls = "border-green-300 bg-green-50 text-green-800";
+              if (isWrong) cls = "border-red-300 bg-red-50 text-red-800";
 
               return (
                 <button
                   key={idx}
                   onClick={() => handleSelect(idx)}
-                  disabled={showResult}
-                  className={`w-full text-left p-6 rounded-2xl border transition-all flex items-center justify-between group ${bgClass}`}
+                  disabled={answered}
+                  className={`w-full text-left px-5 py-4 rounded-xl border transition-all flex items-center justify-between group ${cls} ${!answered ? "cursor-pointer" : "cursor-default"}`}
                 >
-                  <span className="font-medium text-lg">{opt}</span>
-                  {isCorrect && <CheckCircle2 className="text-emerald-400" />}
-                  {isWrong && <XCircle className="text-red-400" />}
+                  <div className="flex items-center gap-4">
+                    <span className={`font-mono text-[9px] font-bold tracking-widest w-5 shrink-0 ${
+                      isCorrect ? "text-green-600" : isWrong ? "text-red-500" : "text-black/25"
+                    }`}>
+                      {String.fromCharCode(65 + idx)}
+                    </span>
+                    <span className="font-mono text-sm font-bold uppercase tracking-wider">{opt}</span>
+                  </div>
+                  {isCorrect && (
+                    <svg className="w-5 h-5 text-green-600 shrink-0" viewBox="0 0 16 16" fill="none">
+                      <path d="M3 8l4 4 6-6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                    </svg>
+                  )}
+                  {isWrong && (
+                    <svg className="w-5 h-5 text-red-500 shrink-0" viewBox="0 0 16 16" fill="none">
+                      <path d="M3 3l10 10M13 3L3 13" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
+                    </svg>
+                  )}
                 </button>
               );
             })}
           </div>
 
-          {showResult && (
-            <motion.div 
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              className="mt-8 pt-8 border-t border-white/10 flex justify-end"
-            >
-              <button 
-                onClick={nextQuestion}
-                className="bg-white text-black px-8 py-3 rounded-xl font-bold hover:bg-white/90 transition-all"
+          {/* Next button appears after answering */}
+          <AnimatePresence>
+            {answered && (
+              <motion.div
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0 }}
+                className="mt-8 pt-6 border-t border-black/[0.06] flex justify-end"
               >
-                {isLast ? "Complete Quiz" : "Next Question"}
-              </button>
-            </motion.div>
-          )}
+                <button
+                  onClick={handleNext}
+                  disabled={saving}
+                  className="font-mono text-[10px] uppercase tracking-wider px-8 py-3 rounded-lg bg-black text-white hover:bg-black/80 transition-colors disabled:opacity-50 flex items-center gap-3"
+                >
+                  {saving ? "SAVING..." : isLast ? "FINISH_QUIZ" : "NEXT_QUESTION"}
+                  {!saving && (
+                    <svg className="w-3.5 h-3.5" viewBox="0 0 16 16" fill="none">
+                      <path d="M3 8h10M9 4l4 4-4 4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                    </svg>
+                  )}
+                </button>
+              </motion.div>
+            )}
+          </AnimatePresence>
         </motion.div>
       </AnimatePresence>
     </div>
