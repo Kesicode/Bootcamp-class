@@ -7,21 +7,28 @@ import { Check } from "lucide-react";
 
 export default function UsersPage() {
   const users = useQuery(api.users.listUsers) || [];
-  const setRole = useMutation(api.users.setRole);
+  const setRole = useMutation(api.users.setRole).withOptimisticUpdate(
+    (localStore, args) => {
+      const existing = localStore.getQuery(api.users.listUsers);
+      if (existing) {
+        localStore.setQuery(
+          api.users.listUsers,
+          {},
+          existing.map(u => u._id === args.targetUserId ? { ...u, role: args.role } : u)
+        );
+      }
+    }
+  );
   
-  const [updatingUserId, setUpdatingUserId] = useState(null);
   const [successUserId, setSuccessUserId] = useState(null);
 
   const handleRoleChange = async (userId, newRole) => {
-    setUpdatingUserId(userId);
     try {
       await setRole({ targetUserId: userId, role: newRole });
       setSuccessUserId(userId);
       setTimeout(() => setSuccessUserId(null), 2000);
     } catch (e) {
       alert("Failed to update role.");
-    } finally {
-      setUpdatingUserId(null);
     }
   };
 
@@ -48,17 +55,15 @@ export default function UsersPage() {
                 <td className="p-4 text-white/50">{u.participantId || "None"}</td>
                 <td className="p-4 flex items-center gap-3">
                    <select 
-                     className="bg-black text-white/80 border border-white/20 rounded p-1 outline-none focus:border-white transition-colors cursor-pointer disabled:opacity-50"
+                     className="bg-black text-white/80 border border-white/20 rounded p-1 outline-none focus:border-white transition-colors cursor-pointer"
                      value={u.role || "student"}
                      onChange={(e) => handleRoleChange(u._id, e.target.value)}
-                     disabled={updatingUserId === u._id}
                    >
                      <option value="student">Student</option>
                      <option value="volunteer">Volunteer</option>
                      <option value="admin">Admin</option>
                    </select>
-                   {updatingUserId === u._id && <span className="text-xs text-blue-400 animate-pulse">Saving...</span>}
-                   {successUserId === u._id && <Check size={16} className="text-emerald-400" />}
+                   {successUserId === u._id && <Check size={16} className="text-emerald-400 animate-in fade-in" />}
                 </td>
               </tr>
             ))}

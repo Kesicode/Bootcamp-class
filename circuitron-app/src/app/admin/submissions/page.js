@@ -7,21 +7,29 @@ import { Check } from "lucide-react";
 
 export default function SubmissionsPage() {
   const submissions = useQuery(api.submissions.listSubmissions) || [];
-  const updateStatus = useMutation(api.submissions.updateStatus);
+  const updateStatus = useMutation(api.submissions.updateStatus).withOptimisticUpdate(
+    (localStore, args) => {
+      const existing = localStore.getQuery(api.submissions.listSubmissions);
+      if (existing) {
+        localStore.setQuery(
+          api.submissions.listSubmissions, 
+          {}, 
+          existing.map(sub => sub._id === args.submissionId ? { ...sub, status: args.status } : sub)
+        );
+      }
+    }
+  );
   
-  const [updatingId, setUpdatingId] = useState(null);
   const [successId, setSuccessId] = useState(null);
 
   const handleUpdate = async (id, status) => {
-    setUpdatingId(id);
     try {
+      // Optimistic update makes the UI feel instant!
       await updateStatus({ submissionId: id, status });
       setSuccessId(id);
       setTimeout(() => setSuccessId(null), 2000);
     } catch (e) {
       alert("Failed to update status.");
-    } finally {
-      setUpdatingId(null);
     }
   };
 
@@ -65,20 +73,17 @@ export default function SubmissionsPage() {
                 <td className="p-4 flex gap-2 items-center">
                   <button 
                     onClick={() => handleUpdate(sub._id, "Approved")}
-                    disabled={updatingId === sub._id}
-                    className="px-3 py-1 bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-400 rounded transition-colors text-xs font-semibold disabled:opacity-50"
+                    className="px-3 py-1 bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-400 rounded transition-colors text-xs font-semibold"
                   >
                     Approve
                   </button>
                   <button 
                     onClick={() => handleUpdate(sub._id, "Needs Revision")}
-                    disabled={updatingId === sub._id}
-                    className="px-3 py-1 bg-amber-500/10 hover:bg-amber-500/20 text-amber-400 rounded transition-colors text-xs font-semibold disabled:opacity-50"
+                    className="px-3 py-1 bg-amber-500/10 hover:bg-amber-500/20 text-amber-400 rounded transition-colors text-xs font-semibold"
                   >
                     Reject
                   </button>
-                  {updatingId === sub._id && <span className="text-xs text-blue-400 animate-pulse ml-2">Saving...</span>}
-                  {successId === sub._id && <Check size={16} className="text-emerald-400 ml-2" />}
+                  {successId === sub._id && <Check size={16} className="text-emerald-400 ml-2 animate-in fade-in" />}
                 </td>
               </tr>
             ))}

@@ -4,12 +4,20 @@ import { useQuery } from "convex/react";
 import { api } from "../../../../convex/_generated/api";
 import Link from "next/link";
 import { BookOpen, CheckCircle, Lock } from "lucide-react";
+import { Skeleton } from "../../../components/ui/skeleton";
 
 export default function RoadmapPage() {
-  const weeks = useQuery(api.content.getWeeks) || [];
+  const weeks = useQuery(api.content.getWeeks);
   
-  // In a real app we'd fetch all days and group them, or fetch them per week.
-  // We'll just do a simple UI showing weeks for now.
+  if (weeks === undefined) {
+    return (
+      <div className="max-w-4xl mx-auto space-y-8">
+        <h2 className="text-3xl font-bold mb-8">Bootcamp Roadmap</h2>
+        <Skeleton className="h-64 w-full rounded-2xl" />
+        <Skeleton className="h-64 w-full rounded-2xl" />
+      </div>
+    );
+  }
 
   return (
     <div className="max-w-4xl mx-auto">
@@ -45,7 +53,16 @@ export default function RoadmapPage() {
 }
 
 function WeekDays({ weekId }) {
-  const days = useQuery(api.content.getDays, { weekId }) || [];
+  const days = useQuery(api.content.getDays, { weekId });
+
+  if (days === undefined) {
+    return (
+      <div className="space-y-3">
+        <Skeleton className="h-16 w-full rounded-xl" />
+        <Skeleton className="h-16 w-full rounded-xl" />
+      </div>
+    );
+  }
   
   return (
     <div className="space-y-3">

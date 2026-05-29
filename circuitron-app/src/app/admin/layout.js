@@ -5,7 +5,8 @@ import { api } from "../../../convex/_generated/api";
 import { useRouter } from "next/navigation";
 import { useEffect } from "react";
 import Link from "next/link";
-import { LayoutDashboard, Users, BookOpen, CheckSquare } from "lucide-react";
+import { LayoutDashboard, Users, BookOpen, CheckSquare, Settings, ChevronLeft, Inbox } from "lucide-react";
+import { Skeleton } from "../../components/ui/skeleton";
 import LogoutButton from "@/components/LogoutButton";
 
 export default function AdminLayout({ children }) {
@@ -20,7 +21,24 @@ export default function AdminLayout({ children }) {
     }
   }, [user, router]);
 
-  if (user === undefined) return <div className="p-8 text-white">Loading Admin Portal...</div>;
+  if (user === undefined) {
+    return (
+      <div className="flex min-h-screen bg-black">
+        <div className="w-64 border-r border-white/10 bg-[#0A0A0B] p-6">
+          <Skeleton className="h-8 w-32 mb-8" />
+          <div className="space-y-4">
+            <Skeleton className="h-10 w-full" />
+            <Skeleton className="h-10 w-full" />
+            <Skeleton className="h-10 w-full" />
+          </div>
+        </div>
+        <div className="flex-1 p-8">
+          <Skeleton className="h-12 w-1/4 mb-8" />
+          <Skeleton className="h-96 w-full rounded-3xl" />
+        </div>
+      </div>
+    );
+  }
   if (!user || user.role !== "admin") return null;
 
   return (

@@ -4,12 +4,25 @@ import { useQuery } from "convex/react";
 import { api } from "../../../convex/_generated/api";
 import { motion } from "framer-motion";
 import { Flame, Target, Trophy, Clock } from "lucide-react";
+import { Skeleton } from "../../components/ui/skeleton";
 
 export default function DashboardPage() {
   const user = useQuery(api.users.current);
-  const leaderboard = useQuery(api.users.getLeaderboard) || [];
+  const leaderboard = useQuery(api.users.getLeaderboard);
 
-  if (user === undefined) return <div className="p-8 text-white">Loading...</div>;
+  if (user === undefined) {
+    return (
+      <div className="space-y-6">
+        <Skeleton className="h-10 w-1/3" />
+        <Skeleton className="h-20 w-2/3" />
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <Skeleton className="h-32 w-full rounded-2xl" />
+          <Skeleton className="h-32 w-full rounded-2xl" />
+          <Skeleton className="h-32 w-full rounded-2xl" />
+        </div>
+      </div>
+    );
+  }
 
   const containerVariants = {
     hidden: { opacity: 0 },
@@ -76,26 +89,34 @@ export default function DashboardPage() {
             <h3 className="text-xl font-semibold mb-6 flex items-center gap-2">
               <Trophy className="text-yellow-500" size={20} /> Top Students
             </h3>
-            <div className="space-y-4">
-              {leaderboard.map((u, i) => (
-                <div key={u._id} className="flex items-center justify-between p-3 rounded-xl hover:bg-white/5 transition-colors">
-                  <div className="flex items-center gap-3">
-                    <div className={`w-8 h-8 rounded-full flex items-center justify-center font-bold text-sm ${
-                      i === 0 ? "bg-yellow-500/20 text-yellow-500" :
-                      i === 1 ? "bg-gray-400/20 text-gray-300" :
-                      i === 2 ? "bg-amber-600/20 text-amber-500" :
-                      "bg-white/5 text-white/50"
-                    }`}>
-                      {i + 1}
+            {leaderboard === undefined ? (
+              <div className="space-y-4">
+                <Skeleton className="h-12 w-full rounded-xl" />
+                <Skeleton className="h-12 w-full rounded-xl" />
+                <Skeleton className="h-12 w-full rounded-xl" />
+              </div>
+            ) : (
+              <div className="space-y-4">
+                {leaderboard.map((u, i) => (
+                  <div key={u._id} className="flex items-center justify-between p-3 rounded-xl hover:bg-white/5 transition-colors border border-white/5">
+                    <div className="flex items-center gap-3">
+                      <div className={`w-8 h-8 rounded-full flex items-center justify-center font-bold text-sm ${
+                        i === 0 ? "bg-yellow-500/20 text-yellow-500" :
+                        i === 1 ? "bg-gray-400/20 text-gray-300" :
+                        i === 2 ? "bg-amber-600/20 text-amber-500" :
+                        "bg-white/5 text-white/50"
+                      }`}>
+                        {i + 1}
+                      </div>
+                      <span className="font-medium">{u.name || "Anonymous"}</span>
                     </div>
-                    <span className="font-medium">{u.name || "Anonymous"}</span>
+                    <div className="flex items-center gap-1 text-sm font-bold text-orange-400">
+                      {u.streakCount || 0} <Flame size={14} />
+                    </div>
                   </div>
-                  <div className="flex items-center gap-1 text-sm font-bold text-orange-400">
-                    {u.streakCount || 0} <Flame size={14} />
-                  </div>
-                </div>
-              ))}
-            </div>
+                ))}
+              </div>
+            )}
           </div>
         </motion.div>
       </div>
