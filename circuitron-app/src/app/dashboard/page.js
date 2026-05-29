@@ -32,8 +32,8 @@ export default function DashboardPage() {
       className="max-w-6xl mx-auto space-y-8"
     >
       <motion.div variants={itemVariants}>
-        <h2 className="text-4xl font-bold tracking-tight">Welcome back, {user?.name || "Student"}! 🚀</h2>
-        <p className="text-white/60 mt-2 text-lg">Here is your Bootcamp progress.</p>
+        <h2 className="text-4xl font-bold tracking-tight">Welcome back, {user?.name || user?.email?.split('@')[0] || "User"}! 🚀</h2>
+        <p className="text-white/60 mt-2 text-lg">Here is your Bootcamp progress. Your role is: <span className="font-bold capitalize text-blue-400">{user?.role || "Student"}</span></p>
       </motion.div>
 
       {/* Stats Grid */}
