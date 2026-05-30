@@ -38,8 +38,10 @@ export default defineSchema({
     unlockAt: v.optional(v.number()), // timestamp
     deadlineAt: v.optional(v.number()), // timestamp
     lateDeadlineAt: v.optional(v.number()), // absolute lock timestamp
-    pointsOnTime: v.optional(v.number()),
-    pointsLate: v.optional(v.number()),
+    videoPoints: v.optional(v.number()),
+    quizPoints: v.optional(v.number()),
+    taskPointsOnTime: v.optional(v.number()),
+    taskPointsLate: v.optional(v.number()),
     order: v.number(),
     taskDescription: v.optional(v.string()),
     taskRequirements: v.optional(v.array(v.string())),

@@ -37,7 +37,7 @@ export default function DayEditor({ dayId, onClose }) {
   const [formData, setFormData] = useState({ 
     title: "", description: "", videoUrl: "", taskDescription: "",
     unlockAtStr: "", deadlineAtStr: "", lateDeadlineAtStr: "",
-    pointsOnTime: 0, pointsLate: 0
+    videoPoints: 0, quizPoints: 0, taskPointsOnTime: 0, taskPointsLate: 0
   });
   const [questions, setQuestions] = useState([]);
   const [isSaving, setIsSaving] = useState(false);
@@ -53,8 +53,10 @@ export default function DayEditor({ dayId, onClose }) {
         unlockAtStr: toDatetimeLocal(day.unlockAt),
         deadlineAtStr: toDatetimeLocal(day.deadlineAt),
         lateDeadlineAtStr: toDatetimeLocal(day.lateDeadlineAt),
-        pointsOnTime: day.pointsOnTime || 0,
-        pointsLate: day.pointsLate || 0
+        videoPoints: day.videoPoints || 0,
+        quizPoints: day.quizPoints || 0,
+        taskPointsOnTime: day.taskPointsOnTime || 0,
+        taskPointsLate: day.taskPointsLate || 0
       });
     }
   }, [day]);
@@ -75,8 +77,10 @@ export default function DayEditor({ dayId, onClose }) {
         unlockAt: toTimestamp(formData.unlockAtStr),
         deadlineAt: toTimestamp(formData.deadlineAtStr),
         lateDeadlineAt: toTimestamp(formData.lateDeadlineAtStr),
-        pointsOnTime: parseInt(formData.pointsOnTime) || 0,
-        pointsLate: parseInt(formData.pointsLate) || 0,
+        videoPoints: parseInt(formData.videoPoints) || 0,
+        quizPoints: parseInt(formData.quizPoints) || 0,
+        taskPointsOnTime: parseInt(formData.taskPointsOnTime) || 0,
+        taskPointsLate: parseInt(formData.taskPointsLate) || 0,
       };
       await updateDay({ dayId, ...payload });
       if (questions.length > 0) await upsertQuiz({ dayId, questions });
@@ -165,14 +169,22 @@ export default function DayEditor({ dayId, onClose }) {
       </div>
 
       {/* Scoring */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8">
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
         <div>
-          <label className="block font-mono text-[9px] tracking-[0.2em] text-black/40 uppercase mb-1.5">POINTS_ON_TIME</label>
-          <input type="number" value={formData.pointsOnTime} onChange={e => setFormData({...formData, pointsOnTime: e.target.value})} className={fieldClass} />
+          <label className="block font-mono text-[9px] tracking-[0.2em] text-black/40 uppercase mb-1.5">VIDEO_POINTS</label>
+          <input type="number" value={formData.videoPoints} onChange={e => setFormData({...formData, videoPoints: e.target.value})} className={fieldClass} />
         </div>
         <div>
-          <label className="block font-mono text-[9px] tracking-[0.2em] text-black/40 uppercase mb-1.5">POINTS_LATE</label>
-          <input type="number" value={formData.pointsLate} onChange={e => setFormData({...formData, pointsLate: e.target.value})} className={fieldClass} />
+          <label className="block font-mono text-[9px] tracking-[0.2em] text-black/40 uppercase mb-1.5">QUIZ_POINTS</label>
+          <input type="number" value={formData.quizPoints} onChange={e => setFormData({...formData, quizPoints: e.target.value})} className={fieldClass} />
+        </div>
+        <div>
+          <label className="block font-mono text-[9px] tracking-[0.2em] text-black/40 uppercase mb-1.5">TASK_ON_TIME</label>
+          <input type="number" value={formData.taskPointsOnTime} onChange={e => setFormData({...formData, taskPointsOnTime: e.target.value})} className={fieldClass} />
+        </div>
+        <div>
+          <label className="block font-mono text-[9px] tracking-[0.2em] text-black/40 uppercase mb-1.5">TASK_LATE</label>
+          <input type="number" value={formData.taskPointsLate} onChange={e => setFormData({...formData, taskPointsLate: e.target.value})} className={fieldClass} />
         </div>
       </div>
 
