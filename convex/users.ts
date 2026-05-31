@@ -87,3 +87,34 @@ export const getRecentActivity = query({
     return activities;
   }
 });
+
+export const getDashboardStats = query({
+  args: {},
+  handler: async (ctx) => {
+    const userId = await auth.getUserId(ctx);
+    if (!userId) return null;
+    const user = await ctx.db.get(userId);
+    if (user?.role !== "admin" && user?.role !== "volunteer") return null;
+
+    const users = await ctx.db.query("users").collect();
+    const students = users.filter(u => u.role === "student" || !u.role);
+    const totalStudents = students.length;
+    
+    const todayStr = new Date().toISOString().split("T")[0];
+    const activeStudents = students.filter(u => u.lastActiveDate === todayStr || (u.streakCount && u.streakCount > 0)).length;
+
+    const startOfToday = new Date();
+    startOfToday.setHours(0, 0, 0, 0);
+    const submissions = await ctx.db.query("submissions").collect();
+    const submissionsToday = submissions.filter(sub => sub.submittedAt >= startOfToday.getTime()).length;
+    
+    const totalSubmissions = submissions.length;
+
+    return {
+      totalStudents,
+      activeStudents,
+      submissionsToday,
+      totalSubmissions,
+    };
+  }
+});

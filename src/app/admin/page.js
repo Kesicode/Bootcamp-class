@@ -7,6 +7,7 @@ import Link from "next/link";
 
 export default function AdminDashboard() {
   const user = useQuery(api.users.current);
+  const stats = useQuery(api.users.getDashboardStats);
   const isAdmin = user?.role === "admin";
 
   const modules = [
@@ -65,6 +66,28 @@ export default function AdminDashboard() {
           CLEARANCE_LEVEL: <span className="text-black dark:text-white font-bold">{isAdmin ? "ADMIN" : "VOLUNTEER"}</span> // SELECT_MODULE_BELOW
         </p>
       </div>
+
+      {/* Stats Overview */}
+      {stats && (
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-10">
+          <div className="p-5 rounded-xl border border-black/[0.06] dark:border-white/[0.06] bg-[#F8F9FA] dark:bg-[#111111]">
+            <p className="font-mono text-[10px] tracking-widest text-black/40 dark:text-white/40 uppercase mb-2">PARTICIPANTS</p>
+            <p className="text-3xl font-display font-black text-black dark:text-white">{stats.totalStudents}</p>
+          </div>
+          <div className="p-5 rounded-xl border border-black/[0.06] dark:border-white/[0.06] bg-[#F8F9FA] dark:bg-[#111111]">
+            <p className="font-mono text-[10px] tracking-widest text-black/40 dark:text-white/40 uppercase mb-2">ACTIVE</p>
+            <p className="text-3xl font-display font-black text-black dark:text-white">{stats.activeStudents}</p>
+          </div>
+          <div className="p-5 rounded-xl border border-black/[0.06] dark:border-white/[0.06] bg-[#F8F9FA] dark:bg-[#111111]">
+            <p className="font-mono text-[10px] tracking-widest text-black/40 dark:text-white/40 uppercase mb-2">SUBMISSIONS (TODAY)</p>
+            <p className="text-3xl font-display font-black text-black dark:text-white">{stats.submissionsToday}</p>
+          </div>
+          <div className="p-5 rounded-xl border border-black/[0.06] dark:border-white/[0.06] bg-[#F8F9FA] dark:bg-[#111111]">
+            <p className="font-mono text-[10px] tracking-widest text-black/40 dark:text-white/40 uppercase mb-2">TOTAL SUBMISSIONS</p>
+            <p className="text-3xl font-display font-black text-black dark:text-white">{stats.totalSubmissions}</p>
+          </div>
+        </div>
+      )}
 
       {/* Module Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
