@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
@@ -24,10 +24,29 @@ export default function QuizPage() {
 
   const [currentIndex, setCurrentIndex] = useState(0);
   const [selected, setSelected] = useState(null);
-  const [answered, setAnswered] = useState(false);
+  const [answered, setAnswered] = useState(false); // means "locked"
   const [score, setScore] = useState(0);
   const [finished, setFinished] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [timeLeft, setTimeLeft] = useState(null);
+
+  useEffect(() => {
+    if (finished || !quiz || !quiz.timeLimit || answered) return;
+    
+    setTimeLeft(quiz.timeLimit);
+    const timer = setInterval(() => {
+      setTimeLeft((prev) => {
+        if (prev === null) return null;
+        if (prev <= 1) {
+          clearInterval(timer);
+          setAnswered(true); // Lock options when time runs out
+          return 0;
+        }
+        return prev - 1;
+      });
+    }, 1000);
+    return () => clearInterval(timer);
+  }, [currentIndex, quiz, finished, answered]);
 
   // ── Loading ──
   if (quiz === undefined) return (
@@ -67,16 +86,18 @@ export default function QuizPage() {
   const handleSelect = (optIdx) => {
     if (answered) return;
     setSelected(optIdx);
-    setAnswered(true);
-    if (optIdx === current.answerIndex) setScore((s) => s + 1);
   };
 
   const handleNext = async () => {
+    // Lock and calculate score for this question
+    const isCorrect = selected === current.answerIndex;
+    const newScore = score + (isCorrect ? 1 : 0);
+    if (isCorrect) setScore(newScore);
+
     if (isLast) {
       setSaving(true);
-      const finalScore = selected === current.answerIndex ? score + 1 : score;
       try {
-        await saveQuizResult({ dayId, score: finalScore, total });
+        await saveQuizResult({ dayId, score: newScore, total });
       } catch (e) {
         console.error(e);
       }
@@ -86,8 +107,10 @@ export default function QuizPage() {
       setCurrentIndex((i) => i + 1);
       setSelected(null);
       setAnswered(false);
+      setTimeLeft(quiz.timeLimit || null);
     }
   };
+
 
   // ── Finished screen ──
   if (finished) {
@@ -148,12 +171,6 @@ export default function QuizPage() {
             >
               BACK_TO_LESSON
             </Link>
-            <button
-              onClick={() => { setCurrentIndex(0); setSelected(null); setAnswered(false); setScore(0); setFinished(false); }}
-              className="font-mono text-[10px] uppercase tracking-wider px-6 py-3 rounded-lg border border-black/[0.12] dark:border-white/[0.12] hover:bg-black/5 dark:hover:bg-white/5 transition-colors text-black dark:text-white"
-            >
-              RETRY_QUIZ
-            </button>
           </div>
         </motion.div>
       </div>
@@ -181,7 +198,11 @@ export default function QuizPage() {
           <span className="font-mono text-[9px] tracking-[0.3em] text-black/30 dark:text-white/30 uppercase">
             QUESTION_{String(currentIndex + 1).padStart(2, "0")}_OF_{String(total).padStart(2, "0")}
           </span>
-          <span className="font-display font-black text-lg text-black dark:text-white">{score} pts</span>
+          {timeLeft !== null && (
+            <span className={`font-mono text-[10px] tracking-widest font-bold ${timeLeft <= 5 ? "text-red-500 animate-pulse" : "text-black/50 dark:text-white/50"}`}>
+              TIME_LEFT: {timeLeft}s
+            </span>
+          )}
         </div>
         <div className="h-[2px] w-full bg-black/5 dark:bg-white/5 rounded-full overflow-hidden">
           <motion.div
@@ -209,47 +230,34 @@ export default function QuizPage() {
 
           <div className="space-y-3">
             {current.options.map((opt, idx) => {
-              const isCorrect = answered && idx === current.answerIndex;
-              const isWrong = answered && selected === idx && idx !== current.answerIndex;
               const isSelected = selected === idx;
 
               let cls = "border-black/[0.08] dark:border-white/[0.08] bg-[#F8F9FA] dark:bg-[#111111] hover:border-black/20 dark:hover:border-white/20 hover:bg-white dark:hover:bg-[#151515] text-black/70 dark:text-white/70";
-              if (isCorrect) cls = "border-green-300 bg-green-50 text-green-800 dark:border-green-800 dark:bg-green-900/30 dark:text-green-400";
-              if (isWrong) cls = "border-red-300 bg-red-50 text-red-800 dark:border-red-800 dark:bg-red-900/30 dark:text-red-400";
+              if (isSelected) cls = "border-black bg-black text-white dark:border-white dark:bg-white dark:text-black";
 
               return (
                 <button
                   key={idx}
                   onClick={() => handleSelect(idx)}
                   disabled={answered}
-                  className={`w-full text-left px-5 py-4 rounded-xl border transition-all flex items-center justify-between group ${cls} ${!answered ? "cursor-pointer" : "cursor-default"}`}
+                  className={`w-full text-left px-5 py-4 rounded-xl border transition-all flex items-center justify-between group ${cls} ${!answered ? "cursor-pointer" : "cursor-default opacity-80"}`}
                 >
                   <div className="flex items-center gap-4">
                     <span className={`font-mono text-[9px] font-bold tracking-widest w-5 shrink-0 ${
-                      isCorrect ? "text-green-600 dark:text-green-400" : isWrong ? "text-red-500 dark:text-red-400" : "text-black/25 dark:text-white/25"
+                      isSelected ? "text-white/70 dark:text-black/70" : "text-black/25 dark:text-white/25"
                     }`}>
                       {String.fromCharCode(65 + idx)}
                     </span>
                     <span className="font-mono text-sm font-bold uppercase tracking-wider">{opt}</span>
                   </div>
-                  {isCorrect && (
-                    <svg className="w-5 h-5 text-green-600 shrink-0" viewBox="0 0 16 16" fill="none">
-                      <path d="M3 8l4 4 6-6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                    </svg>
-                  )}
-                  {isWrong && (
-                    <svg className="w-5 h-5 text-red-500 shrink-0" viewBox="0 0 16 16" fill="none">
-                      <path d="M3 3l10 10M13 3L3 13" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
-                    </svg>
-                  )}
                 </button>
               );
             })}
           </div>
 
-          {/* Next button appears after answering */}
+          {/* Next button appears after answering or timeout */}
           <AnimatePresence>
-            {answered && (
+            {(selected !== null || answered) && (
               <motion.div
                 initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}

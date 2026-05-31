@@ -42,11 +42,16 @@ export const listSubmissions = query({
       submissions.map(async (sub) => {
         const user = await ctx.db.get(sub.userId);
         const day = await ctx.db.get(sub.dayId);
-        return {
-          ...sub,
+        const week = day ? await ctx.db.get(day.weekId) : null;
+        const maxPoints = sub.isLate ? (day?.taskPointsLate || 0) : (day?.taskPointsOnTime || 0);
+        return Object.assign({}, sub, {
           userName: user?.name || user?.email || "Unknown User",
-          dayTitle: day?.title || "Unknown Day"
-        };
+          dayTitle: day?.title || "Unknown Day",
+          weekTitle: week?.title || "Unknown Week",
+          weekOrder: week?.order ?? 999,
+          dayOrder: day?.order ?? 999,
+          maxPoints
+        });
       })
     );
   },
@@ -65,7 +70,11 @@ export const listSubmissions = query({
  *  - DAY_NOT_FOUND
  */
 export const updateStatus = mutation({
-  args: { submissionId: v.id("submissions"), status: v.string() },
+  args: { 
+    submissionId: v.id("submissions"), 
+    status: v.string(),
+    awardedScore: v.optional(v.number())
+  },
   handler: async (ctx, args) => {
     await checkReviewer(ctx);
     
@@ -79,11 +88,16 @@ export const updateStatus = mutation({
       
       const user = await ctx.db.get(submission.userId);
       if (user) {
-        const pointsToAdd = submission.isLate ? (day.taskPointsLate || 0) : (day.taskPointsOnTime || 0);
+        const maxPoints = submission.isLate ? (day.taskPointsLate || 0) : (day.taskPointsOnTime || 0);
+        const pointsToAdd = args.awardedScore !== undefined ? args.awardedScore : maxPoints;
         await ctx.db.patch(user._id, { totalPoints: (user.totalPoints || 0) + pointsToAdd });
       }
       
-      return await ctx.db.patch(args.submissionId, { status: args.status, pointsAwarded: true });
+      return await ctx.db.patch(args.submissionId, { 
+        status: args.status, 
+        pointsAwarded: true,
+        awardedScore: args.awardedScore
+      });
     }
 
     // Standard update if not an approval
@@ -106,7 +120,7 @@ export const updateStatus = mutation({
  *  - Inserts or patches a row in the submissions table
  */
 export const submitTask = mutation({
-  args: { dayId: v.id("days"), link: v.optional(v.string()) },
+  args: { dayId: v.id("days"), link: v.optional(v.string()), feedbackResponse: v.optional(v.string()) },
   handler: async (ctx, args) => {
     const userId = await auth.getUserId(ctx);
     if (!userId) throw new Error("UNAUTHORIZED");
@@ -162,7 +176,7 @@ export const submitTask = mutation({
       }
     }
 
-    return await ctx.db.insert("submissions", {
+    const subId = await ctx.db.insert("submissions", {
       userId,
       dayId: args.dayId,
       link: args.link,
@@ -171,5 +185,30 @@ export const submitTask = mutation({
       pointsAwarded,
       submittedAt: now,
     });
+
+    const progress = await ctx.db
+      .query("userProgress")
+      .withIndex("by_userId_dayId", (q) => q.eq("userId", userId).eq("dayId", args.dayId))
+      .first();
+
+    if (progress) {
+      await ctx.db.patch(progress._id, {
+        submissionCompleted: true,
+        ...(args.feedbackResponse !== undefined ? { feedbackResponse: args.feedbackResponse } : {})
+      });
+    } else {
+      await ctx.db.insert("userProgress", {
+        userId,
+        dayId: args.dayId,
+        videoCompleted: false,
+        quizCompleted: false,
+        submissionCompleted: true,
+        overallCompleted: false,
+        videoWatchPercent: 0,
+        ...(args.feedbackResponse !== undefined ? { feedbackResponse: args.feedbackResponse } : {})
+      });
+    }
+
+    return subId;
   },
 });

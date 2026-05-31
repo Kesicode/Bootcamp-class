@@ -40,12 +40,15 @@ export default function RoadmapPage() {
       </div>
 
       {/* Timeline */}
-      <div className="relative pl-4 md:pl-8">
+      <div className="relative pl-8 md:pl-12">
         {/* Main vertical trace line */}
-        <div className="absolute top-0 bottom-0 left-[15px] md:left-[31px] w-[1px] bg-black/[0.06] dark:bg-white/[0.06] z-0"></div>
+        <div className="absolute top-0 bottom-0 left-4 md:left-6 w-[1px] bg-black/[0.06] dark:bg-white/[0.06] z-0"></div>
 
         <div className="space-y-16">
-          {weeks.map((week, index) => (
+          {weeks.map((week, index) => {
+            const now = Date.now();
+            const isWeekLocked = week.unlockAt && now < week.unlockAt;
+            return (
             <motion.div
               key={week._id}
               initial={{ opacity: 0, x: -20 }}
@@ -56,7 +59,7 @@ export default function RoadmapPage() {
               {/* Week Node */}
               <div className="flex items-start gap-6 mb-8">
                 {/* Node dot */}
-                <div className="relative z-10 w-8 h-8 rounded-full bg-white dark:bg-[#0a0a0a] border-2 border-black dark:border-white flex items-center justify-center shrink-0 -ml-[15px] md:-ml-0">
+                <div className="relative z-10 w-8 h-8 rounded-full bg-white dark:bg-[#0a0a0a] border-2 border-black dark:border-white flex items-center justify-center shrink-0 -ml-8 md:-ml-10">
                   <span className="font-mono text-[9px] font-bold text-black dark:text-white">{index + 1}</span>
                 </div>
                 
@@ -68,8 +71,8 @@ export default function RoadmapPage() {
                       </p>
                       <h3 className="text-2xl font-display font-black tracking-tighter uppercase text-black dark:text-white">{week.title}</h3>
                     </div>
-                    <span className="font-mono text-[9px] uppercase tracking-widest px-3 py-1.5 border border-black/10 dark:border-white/10 rounded-full text-black/50 dark:text-white/50 bg-black/5 dark:bg-white/5 self-start">
-                      {week.status}
+                    <span className={`font-mono text-[9px] uppercase tracking-widest px-3 py-1.5 border rounded-full self-start ${isWeekLocked ? "border-orange-500/20 text-orange-500 bg-orange-500/5" : "border-black/10 dark:border-white/10 text-black/50 dark:text-white/50 bg-black/5 dark:bg-white/5"}`}>
+                      {isWeekLocked ? `UNLOCKS ${new Date(week.unlockAt).toLocaleDateString()}` : week.status}
                     </span>
                   </div>
                   {week.description && (
@@ -80,10 +83,10 @@ export default function RoadmapPage() {
               
               {/* Days List */}
               <div className="pl-8 md:pl-14">
-                <WeekDays weekId={week._id} />
+                <WeekDays weekId={week._id} isWeekLocked={isWeekLocked} />
               </div>
             </motion.div>
-          ))}
+          )})}
 
           {weeks.length === 0 && (
             <div className="text-center py-24 relative z-10 bg-white dark:bg-[#0a0a0a] border border-dashed border-black/10 dark:border-white/10 rounded-2xl">
@@ -98,7 +101,7 @@ export default function RoadmapPage() {
   );
 }
 
-function WeekDays({ weekId }) {
+function WeekDays({ weekId, isWeekLocked }) {
   const days = useQuery(api.content.getDays, { weekId });
   const now = Date.now();
 
@@ -113,13 +116,17 @@ function WeekDays({ weekId }) {
   return (
     <div className="space-y-3">
       {days.map((day, idx) => {
-        const isLocked = day.unlockAt && now < day.unlockAt;
+        const isLocked = isWeekLocked || (day.unlockAt && now < day.unlockAt);
         
         return (
           <Link 
-            href={`/dashboard/days/${day._id}`} 
+            href={isLocked ? "#" : `/dashboard/days/${day._id}`} 
             key={day._id}
-            className="flex flex-col md:flex-row md:items-center justify-between p-5 rounded-xl border border-black/[0.06] dark:border-white/[0.06] transition-all group bg-white dark:bg-[#0a0a0a] relative overflow-hidden hover:border-black/30 dark:hover:border-white/30 hover:shadow-lg hover:-translate-y-0.5"
+            className={`flex flex-col md:flex-row md:items-center justify-between p-5 rounded-xl border border-black/[0.06] dark:border-white/[0.06] transition-all group bg-white dark:bg-[#0a0a0a] relative overflow-hidden ${
+              isLocked 
+                ? "opacity-60 cursor-not-allowed" 
+                : "hover:border-black/30 dark:hover:border-white/30 hover:shadow-lg hover:-translate-y-0.5"
+            }`}
           >
             {/* Hover Accent Line */}
             <div className="absolute left-0 top-0 bottom-0 w-1 bg-black dark:bg-white scale-y-0 group-hover:scale-y-100 transition-transform origin-top"></div>
@@ -142,7 +149,7 @@ function WeekDays({ weekId }) {
                   <span>DAY_{String(day.order).padStart(2, "0")}</span>
                   <span className="w-1 h-1 rounded-full bg-black/20 dark:bg-white/20"></span>
                   <span className={isLocked ? "text-orange-500" : "text-green-500"}>
-                    {isLocked ? `UNLOCKS ${new Date(day.unlockAt).toLocaleDateString()}` : "ACTIVE_NODE"}
+                    {isLocked ? (isWeekLocked ? `LOCKED BY WEEK` : `UNLOCKS ${new Date(day.unlockAt).toLocaleDateString()}`) : "ACTIVE_NODE"}
                   </span>
                 </div>
               </div>

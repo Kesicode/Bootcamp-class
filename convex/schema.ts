@@ -27,6 +27,8 @@ export default defineSchema({
     description: v.optional(v.string()),
     status: v.string(), // e.g. "active"
     order: v.number(),
+    unlockAt: v.optional(v.number()), // timestamp
+    deadlineAt: v.optional(v.number()), // timestamp
   }).index("by_order", ["order"]),
 
   days: defineTable({
@@ -43,6 +45,8 @@ export default defineSchema({
     quizPointsLate: v.optional(v.number()),
     taskPointsOnTime: v.optional(v.number()),
     taskPointsLate: v.optional(v.number()),
+    feedbackEnabled: v.optional(v.boolean()),
+    feedbackQuestion: v.optional(v.string()),
     order: v.number(),
     taskDescription: v.optional(v.string()),
     taskRequirements: v.optional(v.array(v.string())),
@@ -56,6 +60,9 @@ export default defineSchema({
     quizCompleted: v.boolean(),
     submissionCompleted: v.boolean(),
     overallCompleted: v.boolean(),
+    quizScore: v.optional(v.number()),
+    quizTotal: v.optional(v.number()),
+    feedbackResponse: v.optional(v.string()),
     videoWatchPercent: v.number(),
   }).index("by_userId", ["userId"]).index("by_dayId", ["dayId"]).index("by_userId_dayId", ["userId", "dayId"]),
 
@@ -67,11 +74,13 @@ export default defineSchema({
     status: v.string(), // "Pending Review", "Approved", "Needs Revision"
     isLate: v.optional(v.boolean()),
     pointsAwarded: v.optional(v.boolean()),
+    awardedScore: v.optional(v.number()),
     submittedAt: v.number(),
   }).index("by_userId", ["userId"]).index("by_dayId", ["dayId"]).index("by_userId_dayId", ["userId", "dayId"]),
 
   quizzes: defineTable({
     dayId: v.id("days"),
+    timeLimit: v.optional(v.number()), // seconds per question
     questions: v.array(
       v.object({
         question: v.string(),
@@ -79,5 +88,7 @@ export default defineSchema({
         answerIndex: v.number(),
       })
     ),
+    feedbackEnabled: v.optional(v.boolean()),
+    feedbackQuestion: v.optional(v.string()),
   }).index("by_dayId", ["dayId"]),
 });

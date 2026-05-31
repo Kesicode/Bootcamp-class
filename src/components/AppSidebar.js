@@ -186,16 +186,15 @@ function SidebarContents({ open, navItems, brand, badge, badgeColor, topSection,
           <NavItem key={item.href} item={item} open={open} isActive={pathname === item.href} />
         ))}
 
-        {topSection && (
-          <div className={`pt-4 mt-3 border-t border-black/[0.06] dark:border-white/[0.06] ${open ? "" : "flex justify-center"}`}>
-            {topSection(open)}
-          </div>
-        )}
       </nav>
 
       {/* ── LOGOUT & FOOTER — pinned to bottom ── */}
-      <div className="relative z-10 shrink-0 px-3 pb-8 pt-4 border-t border-black/[0.06] dark:border-white/[0.06]">
-
+      <div className="relative z-10 shrink-0 px-3 pb-8 pt-4 border-t border-black/[0.06] dark:border-white/[0.06] flex flex-col gap-2">
+        {topSection && (
+          <div className={`mb-2 ${open ? "" : "flex justify-center"}`}>
+            {topSection(open)}
+          </div>
+        )}
 
         <button
           onClick={onSignOut}

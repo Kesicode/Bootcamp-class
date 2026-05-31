@@ -45,6 +45,15 @@ export default function DashboardSidebarClient() {
         </svg>
       ),
     },
+    {
+      href: "/dashboard/profile",
+      label: "PROFILE",
+      icon: (
+        <svg className="w-4 h-4" viewBox="0 0 16 16" fill="none">
+          <path d="M8 11A3.5 3.5 0 108 4a3.5 3.5 0 000 7zM4.5 15C4.5 12.5 6 11 8 11s3.5 1.5 3.5 4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+        </svg>
+      ),
+    },
   ];
 
   // Inject admin portal link as topSection if user is admin
