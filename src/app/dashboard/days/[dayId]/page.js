@@ -20,10 +20,17 @@ export default function DayViewerPage() {
   const [submitting, setSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState("");
   const [submitted, setSubmitted] = useState(false);
+  const [showFeedback, setShowFeedback] = useState(false);
+  const [feedbackResponse, setFeedbackResponse] = useState("");
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (hasTask && !link.trim()) return;
+    
+    if (day.feedbackEnabled) {
+      setShowFeedback(true);
+      return;
+    }
     setSubmitting(true);
     setSubmitError("");
     try {
@@ -136,6 +143,21 @@ export default function DayViewerPage() {
             </div>
           )}
 
+          {day.references && day.references.length > 0 && (
+            <div className="border border-black/[0.06] dark:border-white/[0.06] rounded-xl p-6 bg-[#F8F9FA] dark:bg-[#111111]">
+              <p className="font-mono text-[10px] tracking-[0.3em] text-black/30 dark:text-white/30 uppercase mb-4">REFERENCES</p>
+              <ul className="space-y-2">
+                {day.references.map((ref, idx) => (
+                  <li key={idx}>
+                    <a href={ref} target="_blank" rel="noopener noreferrer" className="font-mono text-sm text-blue-600 hover:underline break-all">
+                      {ref}
+                    </a>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
+
           {hasQuiz && !isLockedBefore && (
             progress?.quizCompleted ? (
               <div className="flex items-center justify-between p-5 border border-black/[0.08] dark:border-white/[0.08] rounded-xl bg-[#F8F9FA] dark:bg-[#111111] opacity-70">
@@ -206,6 +228,43 @@ export default function DayViewerPage() {
                   <p className="font-mono text-xs text-red-600 font-bold uppercase mb-1">LOCKED</p>
                   <p className="font-mono text-[10px] text-red-600/80 uppercase">Submissions are now closed for this node.</p>
                 </div>
+              ) : showFeedback ? (
+                <form onSubmit={async (e) => {
+                  e.preventDefault();
+                  if (!feedbackResponse.trim()) return;
+                  setSubmitting(true);
+                  setSubmitError("");
+                  try {
+                    await submitTask({ dayId, link: hasTask ? link.trim() : undefined, feedbackResponse });
+                    setSubmitted(true);
+                  } catch (err) {
+                    setSubmitError(err.message || "Failed to submit. Please try again.");
+                  } finally {
+                    setSubmitting(false);
+                  }
+                }} className="space-y-4">
+                  <p className="font-mono text-[10px] text-black/50 dark:text-white/50 uppercase">
+                    {day.feedbackQuestion || "What did you think of today's session?"}
+                  </p>
+                  <textarea
+                    value={feedbackResponse}
+                    onChange={(e) => setFeedbackResponse(e.target.value)}
+                    required
+                    rows={4}
+                    placeholder="Type your response here..."
+                    className="w-full border border-black/[0.12] dark:border-white/[0.12] rounded-lg px-4 py-3 font-mono text-sm outline-none focus:border-black dark:focus:border-white transition-colors bg-white dark:bg-[#0a0a0a] placeholder:text-black/20 dark:placeholder:text-white/20 text-black dark:text-white resize-none"
+                  />
+                  {submitError && (
+                    <p className="font-mono text-[10px] text-red-500 uppercase tracking-wider">{submitError}</p>
+                  )}
+                  <button
+                    type="submit"
+                    disabled={submitting || !feedbackResponse.trim()}
+                    className="w-full bg-black dark:bg-white text-white dark:text-black font-mono text-[10px] uppercase tracking-wider rounded-lg py-3 hover:bg-black/80 dark:hover:bg-white/80 transition-colors disabled:opacity-50"
+                  >
+                    {submitting ? "SUBMITTING..." : "CONFIRM_SUBMISSION"}
+                  </button>
+                </form>
               ) : (
                 <form onSubmit={handleSubmit} className="space-y-4">
                   {hasTask ? (

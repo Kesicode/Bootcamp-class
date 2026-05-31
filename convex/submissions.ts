@@ -49,6 +49,8 @@ export const listSubmissions = query({
           userName: user?.name || user?.email || "Unknown User",
           dayTitle: day?.title || "Unknown Day",
           weekTitle: week?.title || "Unknown Week",
+          weekOrder: week?.order ?? 999,
+          dayOrder: day?.order ?? 999,
           maxPoints
         };
       })
@@ -119,7 +121,7 @@ export const updateStatus = mutation({
  *  - Inserts or patches a row in the submissions table
  */
 export const submitTask = mutation({
-  args: { dayId: v.id("days"), link: v.optional(v.string()) },
+  args: { dayId: v.id("days"), link: v.optional(v.string()), feedbackResponse: v.optional(v.string()) },
   handler: async (ctx, args) => {
     const userId = await auth.getUserId(ctx);
     if (!userId) throw new Error("UNAUTHORIZED");
@@ -175,7 +177,7 @@ export const submitTask = mutation({
       }
     }
 
-    return await ctx.db.insert("submissions", {
+    const subId = await ctx.db.insert("submissions", {
       userId,
       dayId: args.dayId,
       link: args.link,
@@ -184,5 +186,30 @@ export const submitTask = mutation({
       pointsAwarded,
       submittedAt: now,
     });
+
+    const progress = await ctx.db
+      .query("userProgress")
+      .withIndex("by_userId_dayId", (q) => q.eq("userId", userId).eq("dayId", args.dayId))
+      .first();
+
+    if (progress) {
+      await ctx.db.patch(progress._id, {
+        submissionCompleted: true,
+        ...(args.feedbackResponse !== undefined ? { feedbackResponse: args.feedbackResponse } : {})
+      });
+    } else {
+      await ctx.db.insert("userProgress", {
+        userId,
+        dayId: args.dayId,
+        videoCompleted: false,
+        quizCompleted: false,
+        submissionCompleted: true,
+        overallCompleted: false,
+        videoWatchPercent: 0,
+        ...(args.feedbackResponse !== undefined ? { feedbackResponse: args.feedbackResponse } : {})
+      });
+    }
+
+    return subId;
   },
 });

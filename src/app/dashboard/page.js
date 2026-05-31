@@ -4,6 +4,7 @@ import { useQuery } from "convex/react";
 import { api } from "../../../convex/_generated/api";
 import { motion } from "framer-motion";
 import { Skeleton } from "../../components/ui/skeleton";
+import Link from "next/link";
 
 /**
  * Purpose:
@@ -93,10 +94,23 @@ export default function DashboardPage() {
             <div className="absolute top-3 right-4 font-mono text-[8px] text-black/10 dark:text-white/10 pointer-events-none select-none">
               PROGRESS_MATRIX
             </div>
-            <p className="font-mono text-[10px] tracking-[0.3em] text-black/30 dark:text-white/30 uppercase mb-2">COGNITIVE_JOURNEY</p>
-            <h2 className="text-2xl font-display font-black tracking-tighter uppercase text-black dark:text-white mb-8">
-              Completion Status.
-            </h2>
+            <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4 mb-8">
+              <div>
+                <p className="font-mono text-[10px] tracking-[0.3em] text-black/30 dark:text-white/30 uppercase mb-2">COGNITIVE_JOURNEY</p>
+                <h2 className="text-2xl font-display font-black tracking-tighter uppercase text-black dark:text-white leading-none">
+                  Completion Status.
+                </h2>
+              </div>
+              <Link 
+                href={progress?.nextDayId ? `/dashboard/days/${progress.nextDayId}` : "/dashboard/days"}
+                className="inline-flex items-center gap-2 font-mono text-[10px] uppercase tracking-wider px-6 py-3 rounded-lg bg-black dark:bg-white text-white dark:text-black hover:bg-black/80 dark:hover:bg-white/80 transition-colors shrink-0"
+              >
+                CONTINUE_JOURNEY
+                <svg className="w-3.5 h-3.5" viewBox="0 0 16 16" fill="none">
+                  <path d="M3 8h10M9 4l4 4-4 4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                </svg>
+              </Link>
+            </div>
             
             <div className="space-y-7">
               <ProgressBar

@@ -42,9 +42,10 @@ export default defineSchema({
     deadlineAt: v.optional(v.number()), // timestamp
     lateDeadlineAt: v.optional(v.number()), // absolute lock timestamp
     quizPointsOnTime: v.optional(v.number()),
-    quizPointsLate: v.optional(v.number()),
     taskPointsOnTime: v.optional(v.number()),
     taskPointsLate: v.optional(v.number()),
+    feedbackEnabled: v.optional(v.boolean()),
+    feedbackQuestion: v.optional(v.string()),
     order: v.number(),
     taskDescription: v.optional(v.string()),
     taskRequirements: v.optional(v.array(v.string())),
@@ -79,8 +80,6 @@ export default defineSchema({
   quizzes: defineTable({
     dayId: v.id("days"),
     timeLimit: v.optional(v.number()), // seconds per question
-    feedbackEnabled: v.optional(v.boolean()),
-    feedbackQuestion: v.optional(v.string()),
     questions: v.array(
       v.object({
         question: v.string(),

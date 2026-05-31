@@ -116,9 +116,11 @@ export const updateDay = mutation({
     deadlineAt: v.optional(v.number()),
     lateDeadlineAt: v.optional(v.number()),
     quizPointsOnTime: v.optional(v.number()),
-    quizPointsLate: v.optional(v.number()),
     taskPointsOnTime: v.optional(v.number()),
     taskPointsLate: v.optional(v.number()),
+    feedbackEnabled: v.optional(v.boolean()),
+    feedbackQuestion: v.optional(v.string()),
+    references: v.optional(v.array(v.string())),
     order: v.optional(v.number()),
     taskDescription: v.optional(v.string()),
   },
@@ -141,8 +143,6 @@ export const upsertQuiz = mutation({
   args: {
     dayId: v.id("days"),
     timeLimit: v.optional(v.number()),
-    feedbackEnabled: v.optional(v.boolean()),
-    feedbackQuestion: v.optional(v.string()),
     questions: v.array(
       v.object({
         question: v.string(),
@@ -161,8 +161,6 @@ export const upsertQuiz = mutation({
     const quizData = { 
       questions: args.questions, 
       timeLimit: args.timeLimit,
-      feedbackEnabled: args.feedbackEnabled,
-      feedbackQuestion: args.feedbackQuestion,
     };
 
     if (existing) {
@@ -195,12 +193,40 @@ export const getMyProgress = query({
       .withIndex("by_userId", (q) => q.eq("userId", userId))
       .collect();
 
-    const totalDays = allDays.filter((d) => !d.deleted).length;
+    const activeDays = allDays.filter((d) => !d.deleted);
+    const totalDays = activeDays.length;
     const submittedDays = mySubmissions.length;
     const approvedDays = mySubmissions.filter((s) => s.status === "Approved").length;
     const quizCompleted = myProgress.filter((p) => p.quizCompleted).length;
 
-    return { totalDays, submittedDays, approvedDays, quizCompleted };
+    const allWeeks = await ctx.db.query("weeks").collect();
+    const sortedWeeks = allWeeks.sort((a, b) => a.order - b.order);
+    
+    let nextDayId = null;
+    const now = Date.now();
+
+    for (const week of sortedWeeks) {
+      if (week.unlockAt && now < week.unlockAt) continue;
+      const weekDays = activeDays
+        .filter(d => d.weekId === week._id)
+        .sort((a, b) => (a.order || 0) - (b.order || 0));
+        
+      for (const day of weekDays) {
+        if (day.unlockAt && now < day.unlockAt) continue;
+        
+        const hasTask = !!day.taskDescription;
+        const sub = mySubmissions.find(s => s.dayId === day._id);
+        const taskCompleted = hasTask ? !!sub : (myProgress.find(p => p.dayId === day._id)?.quizCompleted || false);
+        
+        if (!taskCompleted) {
+          nextDayId = day._id;
+          break;
+        }
+      }
+      if (nextDayId) break;
+    }
+
+    return { totalDays, submittedDays, approvedDays, quizCompleted, nextDayId };
   },
 });
 
@@ -222,9 +248,7 @@ export const saveQuizResult = mutation({
     if (!existing || !existing.quizCompleted) {
       const user = await ctx.db.get(userId);
       if (user) {
-        const now = Date.now();
-        const isLate = day.deadlineAt && now > day.deadlineAt ? true : false;
-        const pointsToAdd = isLate ? (day.quizPointsLate || 0) : (day.quizPointsOnTime || 0);
+        const pointsToAdd = day.quizPointsOnTime || 0;
         await ctx.db.patch(userId, { totalPoints: (user.totalPoints || 0) + pointsToAdd });
       }
     }

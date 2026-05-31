@@ -102,6 +102,25 @@ export default function AdminLayout({ children }) {
         </svg>
       ),
     },
+    {
+      href: "/admin/leaderboard",
+      label: "LEADERBOARD",
+      icon: (
+        <svg className="w-4 h-4" viewBox="0 0 16 16" fill="none">
+          <path d="M4 14V8m4 6V4m4 10v-4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+        </svg>
+      ),
+    },
+    {
+      href: "/admin/profile",
+      label: "PROFILE",
+      icon: (
+        <svg className="w-4 h-4" viewBox="0 0 16 16" fill="none">
+          <circle cx="8" cy="8" r="3" stroke="currentColor" strokeWidth="1.5"/>
+          <path d="M2 14c0-3.314 2.686-5 6-5s6 1.686 6 5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
+        </svg>
+      ),
+    },
   ];
 
   // "Return to student view" block injected as topSection

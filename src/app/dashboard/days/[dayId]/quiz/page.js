@@ -29,9 +29,6 @@ export default function QuizPage() {
   const [finished, setFinished] = useState(false);
   const [saving, setSaving] = useState(false);
   const [timeLeft, setTimeLeft] = useState(null);
-  const [showFeedback, setShowFeedback] = useState(false);
-  const [feedbackResponse, setFeedbackResponse] = useState("");
-  const [pendingScore, setPendingScore] = useState(null);
 
   useEffect(() => {
     if (finished || !quiz || !quiz.timeLimit || answered) return;
@@ -98,20 +95,14 @@ export default function QuizPage() {
     if (isCorrect) setScore(newScore);
 
     if (isLast) {
-      // If feedback is enabled, show feedback step first
-      if (quiz.feedbackEnabled) {
-        setPendingScore(newScore);
-        setShowFeedback(true);
-      } else {
-        setSaving(true);
-        try {
-          await saveQuizResult({ dayId, score: newScore, total });
-        } catch (e) {
-          console.error(e);
-        }
-        setFinished(true);
-        setSaving(false);
+      setSaving(true);
+      try {
+        await saveQuizResult({ dayId, score: newScore, total });
+      } catch (e) {
+        console.error(e);
       }
+      setFinished(true);
+      setSaving(false);
     } else {
       setCurrentIndex((i) => i + 1);
       setSelected(null);
@@ -120,71 +111,6 @@ export default function QuizPage() {
     }
   };
 
-  const handleSubmitFeedback = async () => {
-    if (!feedbackResponse.trim()) return;
-    setSaving(true);
-    try {
-      await saveQuizResult({ dayId, score: pendingScore, total, feedbackResponse });
-    } catch (e) {
-      console.error(e);
-    }
-    setShowFeedback(false);
-    setScore(pendingScore);
-    setFinished(true);
-    setSaving(false);
-  };
-
-  // ── Feedback step ──
-  if (showFeedback) {
-    return (
-      <div className="max-w-2xl mx-auto py-12">
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
-          className="border border-black/[0.06] dark:border-white/[0.06] rounded-xl p-10 bg-white dark:bg-[#0a0a0a]"
-        >
-          <p className="font-mono text-[10px] tracking-[0.3em] text-black/30 dark:text-white/30 uppercase mb-2">ALMOST_DONE</p>
-          <h2 className="font-display font-black text-2xl tracking-tighter uppercase text-black dark:text-white mb-2">
-            One last thing.
-          </h2>
-          <p className="font-mono text-xs text-black/40 dark:text-white/40 mb-8">
-            Please complete the feedback below before your quiz is submitted.
-          </p>
-
-          <label className="block font-mono text-[10px] tracking-[0.2em] text-black/50 dark:text-white/50 uppercase mb-3">
-            {quiz.feedbackQuestion || "What did you think of today's session?"}
-          </label>
-          <textarea
-            value={feedbackResponse}
-            onChange={(e) => setFeedbackResponse(e.target.value)}
-            rows={5}
-            placeholder="Type your response here..."
-            className="w-full border border-black/[0.1] dark:border-white/[0.1] bg-[#F8F9FA] dark:bg-[#111111] rounded-xl px-5 py-4 font-mono text-sm text-black dark:text-white focus:outline-none focus:border-black dark:focus:border-white resize-none transition-colors mb-6"
-          />
-          <div className="flex items-center justify-between">
-            <p className={`font-mono text-[9px] uppercase tracking-widest transition-opacity ${
-              feedbackResponse.trim() ? "opacity-0" : "text-red-500"
-            }`}>
-              RESPONSE_REQUIRED
-            </p>
-            <button
-              onClick={handleSubmitFeedback}
-              disabled={saving || !feedbackResponse.trim()}
-              className="font-mono text-[10px] uppercase tracking-wider px-8 py-3 rounded-lg bg-black dark:bg-white text-white dark:text-black hover:bg-black/80 dark:hover:bg-white/80 transition-colors disabled:opacity-40 flex items-center gap-3"
-            >
-              {saving ? "SUBMITTING..." : "SUBMIT_QUIZ"}
-              {!saving && (
-                <svg className="w-3.5 h-3.5" viewBox="0 0 16 16" fill="none">
-                  <path d="M3 8h10M9 4l4 4-4 4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
-                </svg>
-              )}
-            </button>
-          </div>
-        </motion.div>
-      </div>
-    );
-  }
 
   // ── Finished screen ──
   if (finished) {

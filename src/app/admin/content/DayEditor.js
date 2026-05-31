@@ -37,9 +37,10 @@ export default function DayEditor({ dayId, onClose }) {
   const [formData, setFormData] = useState({ 
     title: "", description: "", videoUrl: "", taskDescription: "",
     unlockAtStr: "", deadlineAtStr: "", lateDeadlineAtStr: "",
-    quizPointsOnTime: 0, quizPointsLate: 0, taskPointsOnTime: 0, taskPointsLate: 0
+    quizPointsOnTime: 0, taskPointsOnTime: 0, taskPointsLate: 0
   });
   const [questions, setQuestions] = useState([]);
+  const [references, setReferences] = useState([]);
   const [isSaving, setIsSaving] = useState(false);
   const [saved, setSaved] = useState(false);
   
@@ -58,10 +59,12 @@ export default function DayEditor({ dayId, onClose }) {
         deadlineAtStr: toDatetimeLocal(day.deadlineAt),
         lateDeadlineAtStr: toDatetimeLocal(day.lateDeadlineAt),
         quizPointsOnTime: day.quizPointsOnTime || 0,
-        quizPointsLate: day.quizPointsLate || 0,
         taskPointsOnTime: day.taskPointsOnTime || 0,
         taskPointsLate: day.taskPointsLate || 0
       });
+      setReferences(day.references || []);
+      setFeedbackEnabled(day.feedbackEnabled || false);
+      setFeedbackQuestion(day.feedbackQuestion || "What did you think of today's session?");
     }
   }, [day]);
 
@@ -69,14 +72,10 @@ export default function DayEditor({ dayId, onClose }) {
     if (quiz) {
       setQuestions(quiz.questions || []);
       setTimeLimit(quiz.timeLimit !== undefined ? quiz.timeLimit : 15);
-      setFeedbackEnabled(quiz.feedbackEnabled || false);
-      setFeedbackQuestion(quiz.feedbackQuestion || "What did you think of today's session?");
     }
     else if (quiz === null) {
       setQuestions([]);
       setTimeLimit(15);
-      setFeedbackEnabled(false);
-      setFeedbackQuestion("What did you think of today's session?");
     }
   }, [quiz]);
 
@@ -92,17 +91,17 @@ export default function DayEditor({ dayId, onClose }) {
         deadlineAt: toTimestamp(formData.deadlineAtStr),
         lateDeadlineAt: toTimestamp(formData.lateDeadlineAtStr),
         quizPointsOnTime: parseInt(formData.quizPointsOnTime) || 0,
-        quizPointsLate: parseInt(formData.quizPointsLate) || 0,
         taskPointsOnTime: parseInt(formData.taskPointsOnTime) || 0,
         taskPointsLate: parseInt(formData.taskPointsLate) || 0,
+        references: references.filter(r => r.trim() !== ""),
+        feedbackEnabled,
+        feedbackQuestion: feedbackEnabled ? feedbackQuestion : undefined,
       };
       await updateDay({ dayId, ...payload });
       await upsertQuiz({ 
         dayId, 
         questions, 
         timeLimit: timeLimit ? parseInt(timeLimit) : undefined,
-        feedbackEnabled,
-        feedbackQuestion: feedbackEnabled ? feedbackQuestion : undefined,
       });
       setSaved(true);
       setTimeout(() => setSaved(false), 2000);
@@ -167,6 +166,24 @@ export default function DayEditor({ dayId, onClose }) {
           <input type="text" value={formData.videoUrl} onChange={e => setFormData({...formData, videoUrl: e.target.value})} placeholder="https://youtube.com/watch?v=..." className={fieldClass} />
         </div>
         <div>
+          <div className="flex items-center justify-between mb-1.5">
+            <label className="block font-mono text-[9px] tracking-[0.2em] text-black/40 dark:text-white/40 uppercase">REFERENCES / LINKS</label>
+            <button onClick={() => setReferences([...references, ""])} className="font-mono text-[8px] uppercase px-2 py-0.5 border border-black/10 dark:border-white/10 rounded hover:bg-black/5 dark:hover:bg-white/5 transition-colors">+ ADD</button>
+          </div>
+          <div className="space-y-2">
+            {references.length === 0 ? (
+               <p className="font-mono text-[10px] text-black/30 dark:text-white/30 italic">No references added.</p>
+            ) : (
+              references.map((ref, idx) => (
+                <div key={idx} className="flex gap-2">
+                  <input type="text" value={ref} onChange={e => { const n = [...references]; n[idx] = e.target.value; setReferences(n); }} placeholder="https://..." className={fieldClass} />
+                  <button onClick={() => setReferences(references.filter((_, i) => i !== idx))} className="text-black/30 dark:text-white/30 hover:text-red-500 transition-colors px-2">×</button>
+                </div>
+              ))
+            )}
+          </div>
+        </div>
+        <div>
           <label className="block font-mono text-[9px] tracking-[0.2em] text-black/40 dark:text-white/40 uppercase mb-1.5">TASK_DESCRIPTION (MARKDOWN)</label>
           <textarea value={formData.taskDescription} onChange={e => setFormData({...formData, taskDescription: e.target.value})} placeholder="Describe the task using Markdown format..." rows={4} className={fieldClass} />
         </div>
@@ -193,10 +210,6 @@ export default function DayEditor({ dayId, onClose }) {
         <div>
           <label className="block font-mono text-[9px] tracking-[0.2em] text-black/40 dark:text-white/40 uppercase mb-1.5">QUIZ_ON_TIME</label>
           <input type="number" value={formData.quizPointsOnTime} onChange={e => setFormData({...formData, quizPointsOnTime: e.target.value})} className={fieldClass} />
-        </div>
-        <div>
-          <label className="block font-mono text-[9px] tracking-[0.2em] text-black/40 dark:text-white/40 uppercase mb-1.5">QUIZ_LATE</label>
-          <input type="number" value={formData.quizPointsLate} onChange={e => setFormData({...formData, quizPointsLate: e.target.value})} className={fieldClass} />
         </div>
         <div>
           <label className="block font-mono text-[9px] tracking-[0.2em] text-black/40 dark:text-white/40 uppercase mb-1.5">TASK_ON_TIME</label>
@@ -291,8 +304,8 @@ export default function DayEditor({ dayId, onClose }) {
       <div className="mb-8 p-4 border border-black/[0.08] dark:border-white/[0.08] rounded-xl bg-[#F8F9FA] dark:bg-[#111111]">
         <div className="flex items-center justify-between mb-3">
           <div>
-            <p className="font-mono text-[10px] tracking-[0.3em] text-black/30 dark:text-white/30 uppercase">QUIZ_FEEDBACK</p>
-            <p className="font-mono text-[9px] text-black/40 dark:text-white/40 mt-0.5">Show a feedback prompt at the end of the quiz before submission</p>
+            <p className="font-mono text-[10px] tracking-[0.3em] text-black/30 dark:text-white/30 uppercase">TASK_FEEDBACK</p>
+            <p className="font-mono text-[9px] text-black/40 dark:text-white/40 mt-0.5">Show a feedback prompt when submitting the task</p>
           </div>
           <button
             onClick={() => setFeedbackEnabled(!feedbackEnabled)}

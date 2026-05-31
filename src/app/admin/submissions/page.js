@@ -24,19 +24,37 @@ export default function SubmissionsPage() {
   const [scores, setScores] = useState({});
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState("All");
+  const [weekFilter, setWeekFilter] = useState("All");
+  const [dayFilter, setDayFilter] = useState("All");
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 10;
 
   useEffect(() => {
     setCurrentPage(1);
-  }, [searchQuery, statusFilter]);
+  }, [searchQuery, statusFilter, weekFilter, dayFilter]);
+
+  const weeks = Array.from(new Set(submissions.map(s => JSON.stringify({ id: s.weekTitle, order: s.weekOrder }))))
+    .map(w => JSON.parse(w))
+    .sort((a, b) => a.order - b.order)
+    .map(w => w.id);
+
+  const daysInWeek = weekFilter === "All" 
+    ? submissions
+    : submissions.filter(s => s.weekTitle === weekFilter);
+  
+  const days = Array.from(new Set(daysInWeek.map(s => JSON.stringify({ id: s.dayTitle, order: s.dayOrder }))))
+    .map(d => JSON.parse(d))
+    .sort((a, b) => a.order - b.order)
+    .map(d => d.id);
 
   const filteredSubmissions = submissions.filter(sub => {
     const matchesSearch = sub.userName?.toLowerCase().includes(searchQuery.toLowerCase()) || 
                           sub.dayTitle?.toLowerCase().includes(searchQuery.toLowerCase());
     const subStatus = sub.status || "Pending Review";
     const matchesStatus = statusFilter === "All" || subStatus === statusFilter;
-    return matchesSearch && matchesStatus;
+    const matchesWeek = weekFilter === "All" || sub.weekTitle === weekFilter;
+    const matchesDay = dayFilter === "All" || sub.dayTitle === dayFilter;
+    return matchesSearch && matchesStatus && matchesWeek && matchesDay;
   });
 
   const totalPages = Math.ceil(filteredSubmissions.length / itemsPerPage);
@@ -87,7 +105,7 @@ export default function SubmissionsPage() {
           onChange={(e) => setSearchQuery(e.target.value)}
           className="flex-1 bg-white dark:bg-[#0a0a0a] border border-black/[0.1] dark:border-white/[0.1] rounded-lg px-4 py-3 font-mono text-[10px] uppercase tracking-widest focus:outline-none focus:border-black dark:focus:border-white text-black dark:text-white"
         />
-        <div className="relative w-full md:w-64">
+        <div className="relative w-full md:w-56 shrink-0">
           <select
             value={statusFilter}
             onChange={(e) => setStatusFilter(e.target.value)}
@@ -98,10 +116,34 @@ export default function SubmissionsPage() {
             <option value="Approved">APPROVED</option>
             <option value="Needs Revision">NEEDS_REVISION</option>
           </select>
-          <div className="absolute inset-y-0 right-0 flex items-center px-4 pointer-events-none text-black/40 dark:text-white/40">
-            <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" />
-            </svg>
+          <div className="absolute inset-y-0 right-4 flex items-center pointer-events-none text-black/30 dark:text-white/30">
+            <svg className="w-3 h-3" viewBox="0 0 16 16" fill="none"><path d="M4 6l4 4 4-4" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg>
+          </div>
+        </div>
+        <div className="relative w-full md:w-48 shrink-0">
+          <select
+            value={weekFilter}
+            onChange={(e) => { setWeekFilter(e.target.value); setDayFilter("All"); }}
+            className="w-full h-full bg-white dark:bg-[#0a0a0a] border border-black/[0.1] dark:border-white/[0.1] rounded-lg pl-4 pr-10 py-3 font-mono text-[10px] uppercase tracking-widest focus:outline-none focus:border-black dark:focus:border-white text-black dark:text-white appearance-none"
+          >
+            <option value="All">ALL_WEEKS</option>
+            {weeks.map(w => <option key={w} value={w}>{w}</option>)}
+          </select>
+          <div className="absolute inset-y-0 right-4 flex items-center pointer-events-none text-black/30 dark:text-white/30">
+            <svg className="w-3 h-3" viewBox="0 0 16 16" fill="none"><path d="M4 6l4 4 4-4" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg>
+          </div>
+        </div>
+        <div className="relative w-full md:w-48 shrink-0">
+          <select
+            value={dayFilter}
+            onChange={(e) => setDayFilter(e.target.value)}
+            className="w-full h-full bg-white dark:bg-[#0a0a0a] border border-black/[0.1] dark:border-white/[0.1] rounded-lg pl-4 pr-10 py-3 font-mono text-[10px] uppercase tracking-widest focus:outline-none focus:border-black dark:focus:border-white text-black dark:text-white appearance-none"
+          >
+            <option value="All">ALL_DAYS</option>
+            {days.map(d => <option key={d} value={d}>{d}</option>)}
+          </select>
+          <div className="absolute inset-y-0 right-4 flex items-center pointer-events-none text-black/30 dark:text-white/30">
+            <svg className="w-3 h-3" viewBox="0 0 16 16" fill="none"><path d="M4 6l4 4 4-4" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg>
           </div>
         </div>
       </div>
