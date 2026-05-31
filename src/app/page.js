@@ -238,10 +238,9 @@ export default function LandingPage() {
                   {/* Connective Paths */}
                   <path
                     d="M 60 60 H 180 V 100"
-                    stroke={nodes.IN_A ? "#000" : "#CED4DA"}
                     strokeWidth="2"
                     fill="none"
-                    className="transition-colors duration-300"
+                    className={`transition-colors duration-300 ${nodes.IN_A ? "stroke-black dark:stroke-white" : "stroke-[#CED4DA] dark:stroke-gray-700"}`}
                   />
                   {nodes.IN_A && (
                     <path
@@ -256,10 +255,9 @@ export default function LandingPage() {
 
                   <path
                     d="M 60 160 H 180 V 120"
-                    stroke={nodes.IN_B ? "#000" : "#CED4DA"}
                     strokeWidth="2"
                     fill="none"
-                    className="transition-colors duration-300"
+                    className={`transition-colors duration-300 ${nodes.IN_B ? "stroke-black dark:stroke-white" : "stroke-[#CED4DA] dark:stroke-gray-700"}`}
                   />
                   {nodes.IN_B && (
                     <path
@@ -274,10 +272,9 @@ export default function LandingPage() {
 
                   <path
                     d="M 220 110 H 320"
-                    stroke={nodes.GATE ? "#000" : "#CED4DA"}
                     strokeWidth="2"
                     fill="none"
-                    className="transition-colors duration-300"
+                    className={`transition-colors duration-300 ${nodes.GATE ? "stroke-black dark:stroke-white" : "stroke-[#CED4DA] dark:stroke-gray-700"}`}
                   />
                   {nodes.GATE && (
                     <path
@@ -296,17 +293,14 @@ export default function LandingPage() {
                       cx="60"
                       cy="60"
                       r="16"
-                      fill={nodes.IN_A ? "#000" : "#FFF"}
-                      stroke="#000"
                       strokeWidth="2"
-                      className="transition-all duration-300"
+                      className={`transition-all duration-300 stroke-black dark:stroke-white ${nodes.IN_A ? "fill-black dark:fill-white" : "fill-white dark:fill-[#111]"}`}
                     />
                     <text
                       x="60"
                       y="64"
                       textAnchor="middle"
-                      fill={nodes.IN_A ? "#FFF" : "#000"}
-                      className="font-mono text-[9px] font-bold select-none"
+                      className={`font-mono text-[9px] font-bold select-none ${nodes.IN_A ? "fill-white dark:fill-[#111]" : "fill-black dark:fill-white"}`}
                     >
                       A
                     </text>
@@ -321,17 +315,14 @@ export default function LandingPage() {
                       cx="60"
                       cy="160"
                       r="16"
-                      fill={nodes.IN_B ? "#000" : "#FFF"}
-                      stroke="#000"
                       strokeWidth="2"
-                      className="transition-all duration-300"
+                      className={`transition-all duration-300 stroke-black dark:stroke-white ${nodes.IN_B ? "fill-black dark:fill-white" : "fill-white dark:fill-[#111]"}`}
                     />
                     <text
                       x="60"
                       y="164"
                       textAnchor="middle"
-                      fill={nodes.IN_B ? "#FFF" : "#000"}
-                      className="font-mono text-[9px] font-bold select-none"
+                      className={`font-mono text-[9px] font-bold select-none ${nodes.IN_B ? "fill-white dark:fill-[#111]" : "fill-black dark:fill-white"}`}
                     >
                       B
                     </text>
@@ -347,17 +338,14 @@ export default function LandingPage() {
                     width="40"
                     height="40"
                     rx="8"
-                    fill={nodes.GATE ? "#000" : "#FFF"}
-                    stroke="#000"
                     strokeWidth="2"
-                    className="transition-colors duration-300"
+                    className={`transition-colors duration-300 stroke-black dark:stroke-white ${nodes.GATE ? "fill-black dark:fill-white" : "fill-white dark:fill-[#111]"}`}
                   />
                   <text
                     x="200"
                     y="114"
                     textAnchor="middle"
-                    fill={nodes.GATE ? "#FFF" : "#000"}
-                    className="font-mono text-[9px] font-bold select-none"
+                    className={`font-mono text-[9px] font-bold select-none ${nodes.GATE ? "fill-white dark:fill-[#111]" : "fill-black dark:fill-white"}`}
                   >
                     AND
                   </text>
@@ -370,17 +358,14 @@ export default function LandingPage() {
                     cx="320"
                     cy="110"
                     r="12"
-                    fill={nodes.OUT ? "#4ADE80" : "#FFF"}
-                    stroke={nodes.OUT ? "#22C55E" : "#000"}
                     strokeWidth="2"
-                    className="transition-colors duration-300"
+                    className={`transition-colors duration-300 stroke-black dark:stroke-white ${nodes.OUT ? "fill-green-400 stroke-green-500" : "fill-white dark:fill-[#111]"}`}
                   />
                   <text
                     x="320"
                     y="113"
                     textAnchor="middle"
-                    fill={nodes.OUT ? "#FFF" : "#000"}
-                    className="font-mono text-[8px] font-bold select-none"
+                    className={`font-mono text-[8px] font-bold select-none ${nodes.OUT ? "fill-[#111]" : "fill-black dark:fill-white"}`}
                   >
                     Y
                   </text>
@@ -391,7 +376,7 @@ export default function LandingPage() {
               </div>
 
               {/* Real-time Telemetry Monitor terminal */}
-              <div className="bg-[#111] rounded-xl p-4 font-mono text-[10px] text-gray-400 h-28 overflow-y-auto space-y-1.5 border border-black/10 select-none shadow-inner">
+              <div className="bg-[#F3F4F6] dark:bg-[#111] rounded-xl p-4 font-mono text-[10px] text-gray-500 dark:text-gray-400 h-28 overflow-y-auto space-y-1.5 border border-black/10 dark:border-white/10 select-none shadow-inner">
                 {telemetry.map((log, idx) => (
                   <div key={idx} className="flex gap-2">
                     <span className="text-green-500 font-bold">&gt;</span>
@@ -549,9 +534,9 @@ export default function LandingPage() {
                 {/* Right Side: 3D Isometric Ranking Staircase SVG */}
                 <div className="w-[45vw] flex items-center justify-center">
                   <svg width="100%" height="320" viewBox="0 0 500 320" fill="none" className="max-w-xl w-full">
-                    <rect width="100%" height="100%" rx="12" fill="#111" stroke="#333" strokeWidth="2" />
+                    <rect width="100%" height="100%" rx="12" className="fill-white dark:fill-[#111] stroke-[#E5E7EB] dark:stroke-[#333]" strokeWidth="2" />
                     
-                    <g stroke="#1F1F1F" strokeWidth="0.5">
+                    <g className="stroke-[#E5E7EB] dark:stroke-[#1F1F1F]" strokeWidth="0.5">
                       <line x1="50" y1="320" x2="300" y2="70" />
                       <line x1="150" y1="320" x2="400" y2="70" />
                       <line x1="250" y1="320" x2="500" y2="70" />
@@ -559,22 +544,22 @@ export default function LandingPage() {
                     
                     {/* Isometric Staircase blocks */}
                     {/* Step 1 */}
-                    <path d="M 80 260 L 140 230 L 200 260 L 140 290 Z" fill="#1A1A1A" stroke="#333" strokeWidth="1.5" />
-                    <path d="M 80 260 L 80 290 L 140 320 L 140 290 Z" fill="#151515" stroke="#333" strokeWidth="1.5" />
-                    <path d="M 140 290 L 140 320 L 200 290 L 200 260 Z" fill="#222" stroke="#333" strokeWidth="1.5" />
-                    <text x="140" y="275" textAnchor="middle" fill="#666" className="font-mono text-[8px] font-bold">L_03</text>
+                    <path d="M 80 260 L 140 230 L 200 260 L 140 290 Z" className="fill-[#F3F4F6] dark:fill-[#1A1A1A] stroke-[#E5E7EB] dark:stroke-[#333]" strokeWidth="1.5" />
+                    <path d="M 80 260 L 80 290 L 140 320 L 140 290 Z" className="fill-[#E5E7EB] dark:fill-[#151515] stroke-[#E5E7EB] dark:stroke-[#333]" strokeWidth="1.5" />
+                    <path d="M 140 290 L 140 320 L 200 290 L 200 260 Z" className="fill-[#FFFFFF] dark:fill-[#222] stroke-[#E5E7EB] dark:stroke-[#333]" strokeWidth="1.5" />
+                    <text x="140" y="275" textAnchor="middle" className="fill-[#9CA3AF] dark:fill-[#666] font-mono text-[8px] font-bold">L_03</text>
                     
                     {/* Step 2 */}
-                    <path d="M 180 180 L 240 150 L 300 180 L 240 210 Z" fill="#252525" stroke="#333" strokeWidth="1.5" />
-                    <path d="M 180 180 L 180 210 L 240 240 L 240 210 Z" fill="#1E1E1E" stroke="#333" strokeWidth="1.5" />
-                    <path d="M 240 210 L 240 240 L 300 210 L 300 180 Z" fill="#2D2D2D" stroke="#333" strokeWidth="1.5" />
-                    <text x="240" y="195" textAnchor="middle" fill="#888" className="font-mono text-[8px] font-bold">L_02</text>
+                    <path d="M 180 180 L 240 150 L 300 180 L 240 210 Z" className="fill-[#F9FAFB] dark:fill-[#252525] stroke-[#E5E7EB] dark:stroke-[#333]" strokeWidth="1.5" />
+                    <path d="M 180 180 L 180 210 L 240 240 L 240 210 Z" className="fill-[#F3F4F6] dark:fill-[#1E1E1E] stroke-[#E5E7EB] dark:stroke-[#333]" strokeWidth="1.5" />
+                    <path d="M 240 210 L 240 240 L 300 210 L 300 180 Z" className="fill-[#FFFFFF] dark:fill-[#2D2D2D] stroke-[#E5E7EB] dark:stroke-[#333]" strokeWidth="1.5" />
+                    <text x="240" y="195" textAnchor="middle" className="fill-[#6B7280] dark:fill-[#888] font-mono text-[8px] font-bold">L_02</text>
                     
                     {/* Step 3 (Active Top Step) */}
-                    <path d="M 280 100 L 340 70 L 400 100 L 340 130 Z" fill="#000" stroke="#4ADE80" strokeWidth="2" />
-                    <path d="M 280 100 L 280 130 L 340 160 L 340 130 Z" fill="#0A0A0A" stroke="#4ADE80" strokeWidth="1.5" />
-                    <path d="M 340 130 L 340 160 L 400 130 L 400 100 Z" fill="#151515" stroke="#4ADE80" strokeWidth="1.5" />
-                    <text x="340" y="115" textAnchor="middle" fill="#4ADE80" className="font-mono text-[8px] font-bold animate-pulse">APEX_01</text>
+                    <path d="M 280 100 L 340 70 L 400 100 L 340 130 Z" className="fill-black dark:fill-black stroke-green-400" strokeWidth="2" />
+                    <path d="M 280 100 L 280 130 L 340 160 L 340 130 Z" className="fill-gray-900 dark:fill-[#0A0A0A] stroke-green-400" strokeWidth="1.5" />
+                    <path d="M 340 130 L 340 160 L 400 130 L 400 100 Z" className="fill-gray-800 dark:fill-[#151515] stroke-green-400" strokeWidth="1.5" />
+                    <text x="340" y="115" textAnchor="middle" className="fill-green-400 font-mono text-[8px] font-bold animate-pulse">APEX_01</text>
                     
                     <path d="M 340 70 V 30" stroke="#4ADE80" strokeWidth="1.5" strokeDasharray="3 3" />
                     <circle cx="340" cy="30" r="4" fill="#4ADE80" className="animate-ping" />
@@ -592,6 +577,8 @@ export default function LandingPage() {
                   <span className="font-mono text-[9px] text-gray-500 tracking-widest uppercase transition-colors group-hover:text-gray-400">
                     CRAFTED_BY //
                   </span>
+                  
+                  {/*
                   <a
                     href="https://itsmeallen.dev"
                     target="_blank"
@@ -604,6 +591,17 @@ export default function LandingPage() {
                   <span className="font-mono text-[9px] text-gray-500 tracking-widest uppercase transition-colors group-hover:text-gray-400">
                     & KASHINADTH
                   </span>
+                  */}
+
+                  <a
+                    href="https://ieee.ce-kgr.org/"
+                    target="_blank"
+                    rel="noreferrer"
+                    className="font-mono text-[9px] font-black tracking-widest text-white uppercase flex items-center gap-1.5"
+                  >
+                    <span className="w-1.5 h-1.5 bg-green-500 opacity-40 group-hover:opacity-100 transition-opacity animate-pulse shadow-[0_0_8px_rgba(74,222,128,0.5)]" />
+                    <span className="group-hover:text-green-400 transition-colors duration-300">IEEE SB CE KIDANGOOR</span>
+                  </a>
                 </div>
               </div>
 
