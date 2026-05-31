@@ -48,3 +48,42 @@ export const getLeaderboard = query({
       .sort((a, b) => (b.totalPoints || 0) - (a.totalPoints || 0));
   }
 });
+
+export const updateProfile = mutation({
+  args: { name: v.string() },
+  handler: async (ctx, args) => {
+    const userId = await auth.getUserId(ctx);
+    if (!userId) throw new Error("Unauthorized");
+    await ctx.db.patch(userId, { name: args.name });
+  },
+});
+
+export const getRecentActivity = query({
+  args: {},
+  handler: async (ctx) => {
+    const userId = await auth.getUserId(ctx);
+    if (!userId) return [];
+    
+    // Fetch user's submissions
+    const submissions = await ctx.db
+      .query("submissions")
+      .withIndex("by_userId", (q) => q.eq("userId", userId))
+      .order("desc")
+      .take(5);
+
+    // Map to a common activity format
+    const activities = await Promise.all(
+      submissions.map(async (sub) => {
+        const day = await ctx.db.get(sub.dayId);
+        return {
+          _id: sub._id,
+          type: "submission",
+          description: `Submitted ${day?.title || 'Task'}`,
+          timestamp: sub.submittedAt,
+        };
+      })
+    );
+
+    return activities;
+  }
+});

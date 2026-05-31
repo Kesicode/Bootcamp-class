@@ -36,6 +36,8 @@ export default function UsersPage() {
   );
   
   const [successUserId, setSuccessUserId] = useState(null);
+  const [resettingUserId, setResettingUserId] = useState(null);
+  const [newPassword, setNewPassword] = useState("");
 
   const handleRoleChange = async (userId, newRole) => {
     try {
@@ -44,6 +46,22 @@ export default function UsersPage() {
       setTimeout(() => setSuccessUserId(null), 2000);
     } catch (e) {
       alert("Failed to update role.");
+    }
+  };
+
+  const handleResetPassword = async (userId) => {
+    if (!newPassword || newPassword.length < 8) {
+      alert("Password must be at least 8 characters long.");
+      return;
+    }
+    try {
+      // In a real scenario, this would call a mutation to update authAccounts.
+      // Since @convex-dev/auth encrypts and manages passwords internally, we cannot simply patch it here.
+      alert("Note: To securely reset passwords via admin, you must configure a custom action or use the Forgot Password email flow in Convex Auth. The UI is ready for your integration!");
+      setResettingUserId(null);
+      setNewPassword("");
+    } catch (e) {
+      alert("Failed to reset password.");
     }
   };
 
@@ -75,7 +93,7 @@ export default function UsersPage() {
           <table className="w-full text-left">
             <thead>
               <tr className="border-b border-black/[0.06] dark:border-white/[0.06] bg-[#F8F9FA] dark:bg-[#111111]">
-                {["IDENTITY", "ROLE_NODE", "PARTICIPANT_ID", "SET_ROLE"].map(col => (
+                {["IDENTITY", "ROLE_NODE", "PARTICIPANT_ID", "ACTIONS"].map(col => (
                   <th key={col} className="px-5 py-4 font-mono text-[9px] tracking-[0.25em] text-black/30 dark:text-white/30 uppercase font-bold">
                     {col}
                   </th>
@@ -104,24 +122,51 @@ export default function UsersPage() {
                     <span className="font-mono text-xs text-black/40 dark:text-white/40">{u.participantId || "NULL"}</span>
                   </td>
                   <td className="px-5 py-4">
-                    <div className="flex items-center gap-3">
-                      <select
-                        value={u.role || "student"}
-                        onChange={(e) => handleRoleChange(u._id, e.target.value)}
-                        className="border border-black/[0.12] dark:border-white/[0.12] rounded-lg px-3 py-1.5 font-mono text-[10px] uppercase tracking-wider outline-none focus:border-black dark:focus:border-white transition-colors bg-white dark:bg-[#0a0a0a] cursor-pointer text-black dark:text-white"
-                      >
-                        <option value="student">STUDENT</option>
-                        <option value="volunteer">VOLUNTEER</option>
-                        <option value="admin">ADMIN</option>
-                      </select>
-                      {successUserId === u._id && (
-                        <motion.span
-                          initial={{ opacity: 0, scale: 0.8 }}
-                          animate={{ opacity: 1, scale: 1 }}
-                          className="font-mono text-[9px] text-green-600 uppercase tracking-wider"
+                    <div className="flex flex-col gap-2">
+                      <div className="flex items-center gap-3">
+                        <select
+                          value={u.role || "student"}
+                          onChange={(e) => handleRoleChange(u._id, e.target.value)}
+                          className="border border-black/[0.12] dark:border-white/[0.12] rounded-lg px-3 py-1.5 font-mono text-[10px] uppercase tracking-wider outline-none focus:border-black dark:focus:border-white transition-colors bg-white dark:bg-[#0a0a0a] cursor-pointer text-black dark:text-white"
                         >
-                          SAVED
-                        </motion.span>
+                          <option value="student">STUDENT</option>
+                          <option value="volunteer">VOLUNTEER</option>
+                          <option value="admin">ADMIN</option>
+                        </select>
+                        {successUserId === u._id && (
+                          <motion.span
+                            initial={{ opacity: 0, scale: 0.8 }}
+                            animate={{ opacity: 1, scale: 1 }}
+                            className="font-mono text-[9px] text-green-600 uppercase tracking-wider"
+                          >
+                            SAVED
+                          </motion.span>
+                        )}
+                      </div>
+                      
+                      {resettingUserId === u._id ? (
+                        <div className="flex items-center gap-2 mt-2">
+                          <input 
+                            type="text" 
+                            placeholder="New password..."
+                            value={newPassword}
+                            onChange={(e) => setNewPassword(e.target.value)}
+                            className="border border-black/[0.12] dark:border-white/[0.12] rounded flex-1 px-2 py-1 font-mono text-[10px] bg-transparent outline-none focus:border-black/30 dark:focus:border-white/30"
+                          />
+                          <button onClick={() => handleResetPassword(u._id)} className="bg-black dark:bg-white text-white dark:text-black px-2 py-1 rounded font-mono text-[9px] tracking-widest uppercase hover:opacity-80">
+                            Save
+                          </button>
+                          <button onClick={() => setResettingUserId(null)} className="text-black/50 dark:text-white/50 px-2 py-1 rounded font-mono text-[9px] tracking-widest uppercase hover:bg-black/5 dark:hover:bg-white/5">
+                            Cancel
+                          </button>
+                        </div>
+                      ) : (
+                        <button 
+                          onClick={() => { setResettingUserId(u._id); setNewPassword(""); }}
+                          className="text-[9px] font-mono tracking-widest uppercase text-black/40 dark:text-white/40 hover:text-black dark:hover:text-white text-left mt-1 w-max"
+                        >
+                          + RESET_PASSWORD
+                        </button>
                       )}
                     </div>
                   </td>
