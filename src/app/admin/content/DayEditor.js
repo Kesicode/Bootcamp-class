@@ -42,6 +42,8 @@ export default function DayEditor({ dayId, onClose }) {
   const [questions, setQuestions] = useState([]);
   const [isSaving, setIsSaving] = useState(false);
   const [saved, setSaved] = useState(false);
+  
+  const [timeLimit, setTimeLimit] = useState(15);
 
   useEffect(() => {
     if (day) {
@@ -62,8 +64,14 @@ export default function DayEditor({ dayId, onClose }) {
   }, [day]);
 
   useEffect(() => {
-    if (quiz) setQuestions(quiz.questions || []);
-    else if (quiz === null) setQuestions([]);
+    if (quiz) {
+      setQuestions(quiz.questions || []);
+      setTimeLimit(quiz.timeLimit !== undefined ? quiz.timeLimit : 15);
+    }
+    else if (quiz === null) {
+      setQuestions([]);
+      setTimeLimit(15);
+    }
   }, [quiz]);
 
   const handleSave = async () => {
@@ -83,7 +91,11 @@ export default function DayEditor({ dayId, onClose }) {
         taskPointsLate: parseInt(formData.taskPointsLate) || 0,
       };
       await updateDay({ dayId, ...payload });
-      await upsertQuiz({ dayId, questions });
+      await upsertQuiz({ 
+        dayId, 
+        questions, 
+        timeLimit: timeLimit ? parseInt(timeLimit) : undefined 
+      });
       setSaved(true);
       setTimeout(() => setSaved(false), 2000);
     } catch (e) {
@@ -168,8 +180,8 @@ export default function DayEditor({ dayId, onClose }) {
         </div>
       </div>
 
-      {/* Scoring */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
+      {/* Scoring & Timing */}
+      <div className="grid grid-cols-1 md:grid-cols-5 gap-4 mb-8">
         <div>
           <label className="block font-mono text-[9px] tracking-[0.2em] text-black/40 dark:text-white/40 uppercase mb-1.5">QUIZ_ON_TIME</label>
           <input type="number" value={formData.quizPointsOnTime} onChange={e => setFormData({...formData, quizPointsOnTime: e.target.value})} className={fieldClass} />
@@ -186,6 +198,16 @@ export default function DayEditor({ dayId, onClose }) {
           <label className="block font-mono text-[9px] tracking-[0.2em] text-black/40 dark:text-white/40 uppercase mb-1.5">TASK_LATE</label>
           <input type="number" value={formData.taskPointsLate} onChange={e => setFormData({...formData, taskPointsLate: e.target.value})} className={fieldClass} />
         </div>
+        <div>
+          <label className="block font-mono text-[9px] tracking-[0.2em] text-black/40 dark:text-white/40 uppercase mb-1.5">TIME_LIMIT_PER_Q</label>
+          <input 
+            type="number" 
+            placeholder="e.g. 15 (Blank = No limit)" 
+            value={timeLimit} 
+            onChange={e => setTimeLimit(e.target.value)} 
+            className={fieldClass} 
+          />
+        </div>
       </div>
 
       {/* Quiz questions */}
@@ -199,6 +221,7 @@ export default function DayEditor({ dayId, onClose }) {
             ADD_QUESTION
           </button>
         </div>
+
 
         {questions.length === 0 ? (
           <div className="py-6 text-center border border-dashed border-black/10 dark:border-white/10 rounded-lg">

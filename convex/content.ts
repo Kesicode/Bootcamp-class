@@ -140,6 +140,7 @@ export const deleteDay = mutation({
 export const upsertQuiz = mutation({
   args: {
     dayId: v.id("days"),
+    timeLimit: v.optional(v.number()),
     questions: v.array(
       v.object({
         question: v.string(),
@@ -156,9 +157,9 @@ export const upsertQuiz = mutation({
       .first();
 
     if (existing) {
-      await ctx.db.patch(existing._id, { questions: args.questions });
+      await ctx.db.patch(existing._id, { questions: args.questions, timeLimit: args.timeLimit });
     } else {
-      await ctx.db.insert("quizzes", { dayId: args.dayId, questions: args.questions });
+      await ctx.db.insert("quizzes", { dayId: args.dayId, questions: args.questions, timeLimit: args.timeLimit });
     }
   },
 });
@@ -220,7 +221,11 @@ export const saveQuizResult = mutation({
     }
 
     if (existing) {
-      await ctx.db.patch(existing._id, { quizCompleted: true });
+      await ctx.db.patch(existing._id, { 
+        quizCompleted: true,
+        quizScore: args.score,
+        quizTotal: args.total
+      });
     } else {
       await ctx.db.insert("userProgress", {
         userId,
@@ -229,8 +234,22 @@ export const saveQuizResult = mutation({
         quizCompleted: true,
         submissionCompleted: false,
         overallCompleted: false,
+        quizScore: args.score,
+        quizTotal: args.total,
         videoWatchPercent: 0,
       });
     }
   },
+});
+
+export const getDayProgress = query({
+  args: { dayId: v.id("days") },
+  handler: async (ctx, args) => {
+    const userId = await auth.getUserId(ctx);
+    if (!userId) return null;
+    return await ctx.db
+      .query("userProgress")
+      .withIndex("by_userId_dayId", (q) => q.eq("userId", userId).eq("dayId", args.dayId))
+      .first();
+  }
 });

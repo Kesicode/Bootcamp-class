@@ -58,6 +58,8 @@ export default defineSchema({
     quizCompleted: v.boolean(),
     submissionCompleted: v.boolean(),
     overallCompleted: v.boolean(),
+    quizScore: v.optional(v.number()),
+    quizTotal: v.optional(v.number()),
     videoWatchPercent: v.number(),
   }).index("by_userId", ["userId"]).index("by_dayId", ["dayId"]).index("by_userId_dayId", ["userId", "dayId"]),
 
@@ -69,11 +71,13 @@ export default defineSchema({
     status: v.string(), // "Pending Review", "Approved", "Needs Revision"
     isLate: v.optional(v.boolean()),
     pointsAwarded: v.optional(v.boolean()),
+    awardedScore: v.optional(v.number()),
     submittedAt: v.number(),
   }).index("by_userId", ["userId"]).index("by_dayId", ["dayId"]).index("by_userId_dayId", ["userId", "dayId"]),
 
   quizzes: defineTable({
     dayId: v.id("days"),
+    timeLimit: v.optional(v.number()), // seconds per question
     questions: v.array(
       v.object({
         question: v.string(),

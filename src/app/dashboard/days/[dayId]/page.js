@@ -13,6 +13,7 @@ export default function DayViewerPage() {
   
   const day = useQuery(api.content.getDay, { dayId });
   const quiz = useQuery(api.content.getQuiz, { dayId });
+  const progress = useQuery(api.content.getDayProgress, { dayId });
   const submitTask = useMutation(api.submissions.submitTask);
   
   const [link, setLink] = useState("");
@@ -136,22 +137,39 @@ export default function DayViewerPage() {
           )}
 
           {hasQuiz && !isLockedBefore && (
-            <Link
-              href={`/dashboard/days/${dayId}/quiz`}
-              className="flex items-center justify-between p-5 border border-black/[0.08] dark:border-white/[0.08] rounded-xl bg-white dark:bg-[#0a0a0a] hover:bg-black dark:hover:bg-white hover:text-white dark:hover:text-black hover:border-black dark:hover:border-white transition-all group"
-            >
-              <div>
-                <p className="font-mono text-[9px] tracking-[0.3em] text-black/30 dark:text-white/30 group-hover:text-white/50 dark:group-hover:text-black/50 uppercase mb-1 transition-colors">
-                  KNOWLEDGE_CHECK
-                </p>
-                <p className="font-mono text-sm font-bold uppercase tracking-wider text-black dark:text-white group-hover:text-white dark:group-hover:text-black transition-colors">
-                  Take the Quiz →
-                </p>
+            progress?.quizCompleted ? (
+              <div className="flex items-center justify-between p-5 border border-black/[0.08] dark:border-white/[0.08] rounded-xl bg-[#F8F9FA] dark:bg-[#111111] opacity-70">
+                <div>
+                  <p className="font-mono text-[9px] tracking-[0.3em] text-black/30 dark:text-white/30 uppercase mb-1">
+                    KNOWLEDGE_CHECK
+                  </p>
+                  <p className="font-mono text-sm font-bold uppercase tracking-wider text-black/50 dark:text-white/50">
+                    Quiz Completed
+                  </p>
+                </div>
+                <div className="text-right">
+                  <span className="font-mono text-[10px] uppercase tracking-wider text-black/40 dark:text-white/40 block mb-0.5">SCORE</span>
+                  <span className="font-display font-black text-xl text-black dark:text-white leading-none">{progress.quizScore || 0}/{progress.quizTotal || quiz.questions.length}</span>
+                </div>
               </div>
-              <svg className="w-4 h-4 text-black/30 dark:text-white/30 group-hover:text-white dark:group-hover:text-black group-hover:translate-x-1 transition-all" viewBox="0 0 16 16" fill="none">
-                <path d="M3 8h10M9 4l4 4-4 4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
-              </svg>
-            </Link>
+            ) : (
+              <Link
+                href={`/dashboard/days/${dayId}/quiz`}
+                className="flex items-center justify-between p-5 border border-black/[0.08] dark:border-white/[0.08] rounded-xl bg-white dark:bg-[#0a0a0a] hover:bg-black dark:hover:bg-white hover:text-white dark:hover:text-black hover:border-black dark:hover:border-white transition-all group"
+              >
+                <div>
+                  <p className="font-mono text-[9px] tracking-[0.3em] text-black/30 dark:text-white/30 group-hover:text-white/50 dark:group-hover:text-black/50 uppercase mb-1 transition-colors">
+                    KNOWLEDGE_CHECK
+                  </p>
+                  <p className="font-mono text-sm font-bold uppercase tracking-wider text-black dark:text-white group-hover:text-white dark:group-hover:text-black transition-colors">
+                    Take the Quiz →
+                  </p>
+                </div>
+                <svg className="w-4 h-4 text-black/30 dark:text-white/30 group-hover:text-white dark:group-hover:text-black group-hover:translate-x-1 transition-all" viewBox="0 0 16 16" fill="none">
+                  <path d="M3 8h10M9 4l4 4-4 4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                </svg>
+              </Link>
+            )
           )}
         </div>
 

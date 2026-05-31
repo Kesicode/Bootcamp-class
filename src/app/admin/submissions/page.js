@@ -2,7 +2,7 @@
 
 import { useQuery, useMutation } from "convex/react";
 import { api } from "../../../../convex/_generated/api";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 
 export default function SubmissionsPage() {
@@ -21,10 +21,30 @@ export default function SubmissionsPage() {
   );
   
   const [successId, setSuccessId] = useState(null);
+  const [scores, setScores] = useState({});
+  const [searchQuery, setSearchQuery] = useState("");
+  const [statusFilter, setStatusFilter] = useState("All");
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 10;
 
-  const handleUpdate = async (id, status) => {
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchQuery, statusFilter]);
+
+  const filteredSubmissions = submissions.filter(sub => {
+    const matchesSearch = sub.userName?.toLowerCase().includes(searchQuery.toLowerCase()) || 
+                          sub.dayTitle?.toLowerCase().includes(searchQuery.toLowerCase());
+    const subStatus = sub.status || "Pending Review";
+    const matchesStatus = statusFilter === "All" || subStatus === statusFilter;
+    return matchesSearch && matchesStatus;
+  });
+
+  const totalPages = Math.ceil(filteredSubmissions.length / itemsPerPage);
+  const paginatedSubmissions = filteredSubmissions.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
+
+  const handleUpdate = async (id, status, awardedScore) => {
     try {
-      await updateStatus({ submissionId: id, status });
+      await updateStatus({ submissionId: id, status, awardedScore });
       setSuccessId(id);
       setTimeout(() => setSuccessId(null), 2000);
     } catch (e) {
@@ -54,8 +74,36 @@ export default function SubmissionsPage() {
           Submissions.
         </h1>
         <p className="text-black/40 dark:text-white/40 mt-2 font-mono text-xs tracking-wider uppercase">
-          {submissions.length} SUBMISSION_NODES LOADED
+          {filteredSubmissions.length} SUBMISSION_NODES LOADED
         </p>
+      </div>
+
+      {/* Filters */}
+      <div className="flex flex-col md:flex-row gap-4 mb-6">
+        <input 
+          type="text" 
+          placeholder="SEARCH STUDENT OR TASK..." 
+          value={searchQuery}
+          onChange={(e) => setSearchQuery(e.target.value)}
+          className="flex-1 bg-white dark:bg-[#0a0a0a] border border-black/[0.1] dark:border-white/[0.1] rounded-lg px-4 py-3 font-mono text-[10px] uppercase tracking-widest focus:outline-none focus:border-black dark:focus:border-white text-black dark:text-white"
+        />
+        <div className="relative w-full md:w-64">
+          <select
+            value={statusFilter}
+            onChange={(e) => setStatusFilter(e.target.value)}
+            className="w-full h-full bg-white dark:bg-[#0a0a0a] border border-black/[0.1] dark:border-white/[0.1] rounded-lg pl-4 pr-10 py-3 font-mono text-[10px] uppercase tracking-widest focus:outline-none focus:border-black dark:focus:border-white text-black dark:text-white appearance-none"
+          >
+            <option value="All">ALL_STATUSES</option>
+            <option value="Pending Review">PENDING_REVIEW</option>
+            <option value="Approved">APPROVED</option>
+            <option value="Needs Revision">NEEDS_REVISION</option>
+          </select>
+          <div className="absolute inset-y-0 right-0 flex items-center px-4 pointer-events-none text-black/40 dark:text-white/40">
+            <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" />
+            </svg>
+          </div>
+        </div>
       </div>
 
       {/* Table */}
@@ -64,7 +112,7 @@ export default function SubmissionsPage() {
           <table className="w-full text-left">
             <thead>
               <tr className="border-b border-black/[0.06] dark:border-white/[0.06] bg-[#F8F9FA] dark:bg-[#111111]">
-                {["STUDENT", "TASK_NODE", "SUBMISSION_LINK", "STATUS", "ACTION"].map(col => (
+                {["STUDENT", "TASK_NODE", "SUBMISSION_LINK", "SCORE", "STATUS", "ACTION"].map(col => (
                   <th key={col} className="px-5 py-4 font-mono text-[9px] tracking-[0.25em] text-black/30 dark:text-white/30 uppercase font-bold">
                     {col}
                   </th>
@@ -72,7 +120,7 @@ export default function SubmissionsPage() {
               </tr>
             </thead>
             <tbody>
-              {submissions.map((sub, i) => (
+              {paginatedSubmissions.map((sub, i) => (
                 <motion.tr
                   key={sub._id}
                   initial={{ opacity: 0 }}
@@ -84,7 +132,8 @@ export default function SubmissionsPage() {
                     <span className="font-mono text-sm font-bold text-black dark:text-white uppercase tracking-wider">{sub.userName}</span>
                   </td>
                   <td className="px-5 py-4">
-                    <span className="font-mono text-xs text-black/50 dark:text-white/50">{sub.dayTitle}</span>
+                    <span className="font-mono text-[10px] text-black/40 dark:text-white/40 uppercase tracking-widest block mb-0.5">{sub.weekTitle}</span>
+                    <span className="font-mono text-xs text-black/80 dark:text-white/80">{sub.dayTitle}</span>
                   </td>
                   <td className="px-5 py-4">
                     {sub.link ? (
@@ -99,6 +148,25 @@ export default function SubmissionsPage() {
                     )}
                   </td>
                   <td className="px-5 py-4">
+                    {sub.status === "Approved" ? (
+                      <span className="font-mono text-[10px] text-black dark:text-white font-bold tracking-widest">
+                        {sub.awardedScore !== undefined ? sub.awardedScore : sub.maxPoints} / {sub.maxPoints}
+                      </span>
+                    ) : (
+                      <div className="flex items-center gap-2">
+                        <input
+                          type="number"
+                          min="0"
+                          max={sub.maxPoints}
+                          value={scores[sub._id] !== undefined ? scores[sub._id] : sub.maxPoints}
+                          onChange={(e) => setScores({ ...scores, [sub._id]: parseInt(e.target.value) || 0 })}
+                          className="w-16 bg-transparent border-b border-black/20 dark:border-white/20 font-mono text-[10px] text-center focus:outline-none focus:border-black dark:focus:border-white"
+                        />
+                        <span className="font-mono text-[10px] text-black/50 dark:text-white/50">/ {sub.maxPoints}</span>
+                      </div>
+                    )}
+                  </td>
+                  <td className="px-5 py-4">
                     <span className={`inline-block font-mono text-[9px] uppercase tracking-widest px-2 py-1 border rounded-full ${statusColor(sub.status)}`}>
                       {sub.status || "PENDING"}
                     </span>
@@ -106,7 +174,7 @@ export default function SubmissionsPage() {
                   <td className="px-5 py-4">
                     <div className="flex items-center gap-2">
                       <button
-                        onClick={() => handleUpdate(sub._id, "Approved")}
+                        onClick={() => handleUpdate(sub._id, "Approved", scores[sub._id] !== undefined ? scores[sub._id] : sub.maxPoints)}
                         className="font-mono text-[9px] uppercase tracking-wider px-3 py-1.5 rounded border border-green-200 dark:border-green-800 text-green-700 dark:text-green-400 hover:bg-green-50 dark:hover:bg-green-900/30 transition-colors"
                       >
                         APPROVE
@@ -130,9 +198,9 @@ export default function SubmissionsPage() {
                   </td>
                 </motion.tr>
               ))}
-              {submissions.length === 0 && (
+              {paginatedSubmissions.length === 0 && (
                 <tr>
-                  <td colSpan={5} className="px-5 py-16 text-center">
+                  <td colSpan={6} className="px-5 py-16 text-center">
                     <p className="font-mono text-[10px] tracking-widest text-black/20 dark:text-white/20 uppercase">
                       QUEUE_EMPTY // NO_SUBMISSIONS_PENDING
                     </p>
@@ -142,6 +210,30 @@ export default function SubmissionsPage() {
             </tbody>
           </table>
         </div>
+        
+        {totalPages > 1 && (
+          <div className="flex items-center justify-between p-4 border-t border-black/[0.06] dark:border-white/[0.06] bg-[#F8F9FA] dark:bg-[#111111]">
+            <p className="font-mono text-[10px] text-black/40 dark:text-white/40 tracking-widest uppercase">
+              PAGE {currentPage} OF {totalPages}
+            </p>
+            <div className="flex items-center gap-2">
+              <button
+                disabled={currentPage === 1}
+                onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
+                className="font-mono text-[10px] uppercase tracking-wider px-3 py-1.5 rounded border border-black/10 dark:border-white/10 hover:bg-black/5 dark:hover:bg-white/5 disabled:opacity-50 disabled:cursor-not-allowed transition-colors text-black dark:text-white"
+              >
+                PREVIOUS
+              </button>
+              <button
+                disabled={currentPage === totalPages}
+                onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
+                className="font-mono text-[10px] uppercase tracking-wider px-3 py-1.5 rounded border border-black/10 dark:border-white/10 hover:bg-black/5 dark:hover:bg-white/5 disabled:opacity-50 disabled:cursor-not-allowed transition-colors text-black dark:text-white"
+              >
+                NEXT
+              </button>
+            </div>
+          </div>
+        )}
       </div>
     </motion.div>
   );
