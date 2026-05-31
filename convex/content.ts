@@ -141,6 +141,8 @@ export const upsertQuiz = mutation({
   args: {
     dayId: v.id("days"),
     timeLimit: v.optional(v.number()),
+    feedbackEnabled: v.optional(v.boolean()),
+    feedbackQuestion: v.optional(v.string()),
     questions: v.array(
       v.object({
         question: v.string(),
@@ -156,10 +158,17 @@ export const upsertQuiz = mutation({
       .withIndex("by_dayId", (q) => q.eq("dayId", args.dayId))
       .first();
 
+    const quizData = { 
+      questions: args.questions, 
+      timeLimit: args.timeLimit,
+      feedbackEnabled: args.feedbackEnabled,
+      feedbackQuestion: args.feedbackQuestion,
+    };
+
     if (existing) {
-      await ctx.db.patch(existing._id, { questions: args.questions, timeLimit: args.timeLimit });
+      await ctx.db.patch(existing._id, quizData);
     } else {
-      await ctx.db.insert("quizzes", { dayId: args.dayId, questions: args.questions, timeLimit: args.timeLimit });
+      await ctx.db.insert("quizzes", { dayId: args.dayId, ...quizData });
     }
   },
 });
@@ -196,7 +205,7 @@ export const getMyProgress = query({
 });
 
 export const saveQuizResult = mutation({
-  args: { dayId: v.id("days"), score: v.number(), total: v.number() },
+  args: { dayId: v.id("days"), score: v.number(), total: v.number(), feedbackResponse: v.optional(v.string()) },
   handler: async (ctx, args) => {
     const userId = await auth.getUserId(ctx);
     if (!userId) throw new Error("UNAUTHORIZED");
@@ -224,7 +233,8 @@ export const saveQuizResult = mutation({
       await ctx.db.patch(existing._id, { 
         quizCompleted: true,
         quizScore: args.score,
-        quizTotal: args.total
+        quizTotal: args.total,
+        ...(args.feedbackResponse !== undefined ? { feedbackResponse: args.feedbackResponse } : {})
       });
     } else {
       await ctx.db.insert("userProgress", {
@@ -237,6 +247,7 @@ export const saveQuizResult = mutation({
         quizScore: args.score,
         quizTotal: args.total,
         videoWatchPercent: 0,
+        ...(args.feedbackResponse !== undefined ? { feedbackResponse: args.feedbackResponse } : {})
       });
     }
   },

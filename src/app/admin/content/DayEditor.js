@@ -44,6 +44,8 @@ export default function DayEditor({ dayId, onClose }) {
   const [saved, setSaved] = useState(false);
   
   const [timeLimit, setTimeLimit] = useState(15);
+  const [feedbackEnabled, setFeedbackEnabled] = useState(false);
+  const [feedbackQuestion, setFeedbackQuestion] = useState("What did you think of today's session?");
 
   useEffect(() => {
     if (day) {
@@ -67,10 +69,14 @@ export default function DayEditor({ dayId, onClose }) {
     if (quiz) {
       setQuestions(quiz.questions || []);
       setTimeLimit(quiz.timeLimit !== undefined ? quiz.timeLimit : 15);
+      setFeedbackEnabled(quiz.feedbackEnabled || false);
+      setFeedbackQuestion(quiz.feedbackQuestion || "What did you think of today's session?");
     }
     else if (quiz === null) {
       setQuestions([]);
       setTimeLimit(15);
+      setFeedbackEnabled(false);
+      setFeedbackQuestion("What did you think of today's session?");
     }
   }, [quiz]);
 
@@ -94,7 +100,9 @@ export default function DayEditor({ dayId, onClose }) {
       await upsertQuiz({ 
         dayId, 
         questions, 
-        timeLimit: timeLimit ? parseInt(timeLimit) : undefined 
+        timeLimit: timeLimit ? parseInt(timeLimit) : undefined,
+        feedbackEnabled,
+        feedbackQuestion: feedbackEnabled ? feedbackQuestion : undefined,
       });
       setSaved(true);
       setTimeout(() => setSaved(false), 2000);
@@ -275,6 +283,38 @@ export default function DayEditor({ dayId, onClose }) {
                 </div>
               </div>
             ))}
+          </div>
+        )}
+      </div>
+
+      {/* Feedback Section */}
+      <div className="mb-8 p-4 border border-black/[0.08] dark:border-white/[0.08] rounded-xl bg-[#F8F9FA] dark:bg-[#111111]">
+        <div className="flex items-center justify-between mb-3">
+          <div>
+            <p className="font-mono text-[10px] tracking-[0.3em] text-black/30 dark:text-white/30 uppercase">QUIZ_FEEDBACK</p>
+            <p className="font-mono text-[9px] text-black/40 dark:text-white/40 mt-0.5">Show a feedback prompt at the end of the quiz before submission</p>
+          </div>
+          <button
+            onClick={() => setFeedbackEnabled(!feedbackEnabled)}
+            className={`relative w-10 h-5 rounded-full transition-colors duration-200 focus:outline-none shrink-0 ${
+              feedbackEnabled ? "bg-black dark:bg-white" : "bg-black/10 dark:bg-white/10"
+            }`}
+          >
+            <span className={`absolute top-0.5 left-0.5 w-4 h-4 rounded-full bg-white dark:bg-black transition-transform duration-200 ${
+              feedbackEnabled ? "translate-x-5" : "translate-x-0"
+            }`} />
+          </button>
+        </div>
+        {feedbackEnabled && (
+          <div className="mt-3 pt-3 border-t border-black/[0.06] dark:border-white/[0.06]">
+            <label className="block font-mono text-[9px] tracking-[0.2em] text-black/40 dark:text-white/40 uppercase mb-1.5">FEEDBACK_QUESTION</label>
+            <textarea
+              value={feedbackQuestion}
+              onChange={e => setFeedbackQuestion(e.target.value)}
+              rows={2}
+              placeholder="e.g. What did you think of today's session?"
+              className="w-full border border-black/[0.1] dark:border-white/[0.1] bg-white dark:bg-[#0a0a0a] rounded-lg px-3 py-2 font-mono text-sm text-black dark:text-white focus:outline-none focus:border-black dark:focus:border-white resize-none"
+            />
           </div>
         )}
       </div>
