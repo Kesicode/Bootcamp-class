@@ -6,6 +6,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
 import DayEditor from "./DayEditor";
+import WeekEditor from "./WeekEditor";
 
 /**
  * Purpose:
@@ -31,19 +32,28 @@ export default function ContentPage() {
   const [newWeekTitle, setNewWeekTitle] = useState("");
   const [selectedWeek, setSelectedWeek] = useState(null);
   const [editingDayId, setEditingDayId] = useState(null);
+  const [editingWeekId, setEditingWeekId] = useState(null);
   
   const days = useQuery(api.content.getDays, { weekId: selectedWeek === null ? undefined : selectedWeek }) || [];
 
   const handleCreateWeek = async (e) => {
     e.preventDefault();
     if (!newWeekTitle.trim()) return;
-    await createWeek({ title: newWeekTitle, status: "active", order: weeks.length + 1 });
-    setNewWeekTitle("");
+    try {
+      await createWeek({ title: newWeekTitle, status: "active", order: weeks.length + 1 });
+      setNewWeekTitle("");
+    } catch (err) {
+      alert("Failed to create week: " + err.message);
+    }
   };
 
   const handleCreateDay = async () => {
     if (!selectedWeek) return;
-    await createDay({ weekId: selectedWeek, title: "New Day", order: days.length + 1 });
+    try {
+      await createDay({ weekId: selectedWeek, title: "New Day", order: days.length + 1 });
+    } catch (err) {
+      alert("Failed to create day: " + err.message);
+    }
   };
 
   return (
@@ -75,6 +85,7 @@ export default function ContentPage() {
               value={newWeekTitle}
               onChange={(e) => setNewWeekTitle(e.target.value)}
               placeholder="Week title e.g. Week 1 — Foundations"
+              required
               className="flex-1 border border-black/[0.12] dark:border-white/[0.12] rounded-lg px-4 py-2.5 font-mono text-sm outline-none focus:border-black dark:focus:border-white transition-colors bg-white dark:bg-[#0a0a0a] text-black dark:text-white placeholder:text-black/20 dark:placeholder:text-white/20"
             />
             <button
@@ -97,7 +108,11 @@ export default function ContentPage() {
                     ? "bg-black dark:bg-white border-black dark:border-white"
                     : "bg-[#F8F9FA] dark:bg-[#111111] border-black/[0.06] dark:border-white/[0.06] hover:border-black/20 dark:hover:border-white/20"
                 }`}
-                onClick={() => { setSelectedWeek(week._id); setEditingDayId(null); }}
+                onClick={() => { 
+                  setSelectedWeek(week._id); 
+                  setEditingDayId(null); 
+                  setEditingWeekId(null); 
+                }}
               >
                 <div>
                   <p className={`font-mono text-[9px] tracking-[0.2em] uppercase mb-0.5 ${selectedWeek === week._id ? "text-white/50 dark:text-black/50" : "text-black/30 dark:text-white/30"}`}>
@@ -110,22 +125,39 @@ export default function ContentPage() {
                     STATUS: {week.status?.toUpperCase()}
                   </p>
                 </div>
-                <button
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    if (confirm("Delete this week and all its days?")) {
-                      deleteWeek({ weekId: week._id });
-                      if (selectedWeek === week._id) setSelectedWeek(null);
-                    }
-                  }}
-                  className={`p-2 rounded-lg transition-colors opacity-0 group-hover:opacity-100 ${
-                    selectedWeek === week._id ? "hover:bg-white/10 dark:hover:bg-black/10 text-white/60 dark:text-black/60 hover:text-white dark:hover:text-black" : "hover:bg-red-50 dark:hover:bg-red-900/30 text-black/30 dark:text-white/30 hover:text-red-600 dark:hover:text-red-400"
-                  }`}
-                >
-                  <svg className="w-4 h-4" viewBox="0 0 16 16" fill="none">
-                    <path d="M3 4h10M6 4V2h4v2M6 7v5M10 7v5M4 4l.5 9h7l.5-9" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
-                  </svg>
-                </button>
+                <div className="flex items-center gap-1">
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setSelectedWeek(week._id);
+                      setEditingWeekId(week._id);
+                      setEditingDayId(null);
+                    }}
+                    className={`font-mono text-[9px] uppercase tracking-wider px-2.5 py-1.5 rounded border transition-all opacity-0 group-hover:opacity-100 ${
+                      selectedWeek === week._id 
+                        ? "border-white/20 dark:border-black/20 hover:bg-white/10 dark:hover:bg-black/10 text-white/80 dark:text-black/80" 
+                        : "border-black/[0.08] dark:border-white/[0.08] hover:bg-black dark:hover:bg-white text-black/60 dark:text-white/60 hover:text-white dark:hover:text-black"
+                    }`}
+                  >
+                    EDIT
+                  </button>
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      if (confirm("Delete this week and all its days?")) {
+                        deleteWeek({ weekId: week._id });
+                        if (selectedWeek === week._id) setSelectedWeek(null);
+                      }
+                    }}
+                    className={`p-2 rounded-lg transition-colors opacity-0 group-hover:opacity-100 ${
+                      selectedWeek === week._id ? "hover:bg-white/10 dark:hover:bg-black/10 text-white/60 dark:text-black/60 hover:text-white dark:hover:text-black" : "hover:bg-red-50 dark:hover:bg-red-900/30 text-black/30 dark:text-white/30 hover:text-red-600 dark:hover:text-red-400"
+                    }`}
+                  >
+                    <svg className="w-4 h-4" viewBox="0 0 16 16" fill="none">
+                      <path d="M3 4h10M6 4V2h4v2M6 7v5M10 7v5M4 4l.5 9h7l.5-9" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                    </svg>
+                  </button>
+                </div>
               </div>
             ))}
             {weeks.length === 0 && (
@@ -157,6 +189,8 @@ export default function ContentPage() {
             <div className="py-16 text-center border border-dashed border-black/10 dark:border-white/10 rounded-xl">
               <p className="font-mono text-[10px] tracking-widest text-black/25 dark:text-white/25 uppercase">SELECT_CLUSTER // TO VIEW DAYS</p>
             </div>
+          ) : editingWeekId ? (
+            <WeekEditor weekId={editingWeekId} onClose={() => setEditingWeekId(null)} />
           ) : editingDayId ? (
             <DayEditor dayId={editingDayId} onClose={() => setEditingDayId(null)} />
           ) : (

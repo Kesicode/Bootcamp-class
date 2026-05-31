@@ -15,8 +15,9 @@ import { Skeleton } from "../../components/ui/skeleton";
 export default function DashboardPage() {
   const user = useQuery(api.users.current);
   const progress = useQuery(api.content.getMyProgress);
+  const leaderboard = useQuery(api.users.getLeaderboard);
 
-  const isLoading = user === undefined || progress === undefined;
+  const isLoading = user === undefined || progress === undefined || leaderboard === undefined;
 
   if (isLoading) {
     return (
@@ -39,10 +40,20 @@ export default function DashboardPage() {
   const approvedDays = progress?.approvedDays || 0;
   const quizCompleted = progress?.quizCompleted || 0;
 
-  // Derived percentages — guard against zero totalDays
   const submissionPct = totalDays > 0 ? Math.round((submittedDays / totalDays) * 100) : 0;
   const approvalPct = totalDays > 0 ? Math.round((approvedDays / totalDays) * 100) : 0;
   const quizPct = totalDays > 0 ? Math.round((quizCompleted / totalDays) * 100) : 0;
+
+  // Streak & Rank
+  const streak = user?.streakCount || 0;
+  const myRank = leaderboard ? leaderboard.findIndex(u => u._id === user?._id) + 1 : 0;
+  
+  const pendingTasks = Math.max(0, totalDays - submittedDays);
+
+  // Overall Journey
+  const overallTotal = totalDays * 3;
+  const overallCompleted = submittedDays + approvedDays + quizCompleted;
+  const overallPct = overallTotal > 0 ? Math.round((overallCompleted / overallTotal) * 100) : 0;
 
   return (
     <motion.div
@@ -65,10 +76,13 @@ export default function DashboardPage() {
       </div>
 
       {/* Stats Grid — all real data */}
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-        <StatCard label="TASKS_SUBMITTED" value={submittedDays} unit={`/ ${totalDays}`} index={0} />
-        <StatCard label="TASKS_APPROVED" value={approvedDays} unit={`/ ${totalDays}`} index={1} />
-        <StatCard label="QUIZZES_DONE" value={quizCompleted} unit={`/ ${totalDays}`} index={2} />
+      <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+        <StatCard label="STREAK_ACTIVE" value={streak} unit="DAYS" index={0} />
+        <StatCard label="TASKS_PENDING" value={pendingTasks} unit="TASKS" index={1} />
+        <StatCard label="TASKS_SUBMITTED" value={submittedDays} unit={`/ ${totalDays}`} index={2} />
+        <StatCard label="TASKS_APPROVED" value={approvedDays} unit={`/ ${totalDays}`} index={3} />
+        <StatCard label="QUIZZES_DONE" value={quizCompleted} unit={`/ ${totalDays}`} index={4} />
+        <StatCard label="CURRENT_RANK" value={myRank > 0 ? myRank : "-"} unit={myRank > 0 ? `OF ${leaderboard?.length || 0}` : ""} index={5} />
       </div>
 
       <div className="grid grid-cols-1 gap-8">
@@ -86,26 +100,36 @@ export default function DashboardPage() {
             
             <div className="space-y-7">
               <ProgressBar
-                label="TASKS_SUBMITTED"
-                pct={submissionPct}
-                detail={`${submittedDays} of ${totalDays} days`}
+                label="OVERALL_JOURNEY"
+                pct={overallPct}
+                detail={`COMPLETED ${overallCompleted} OF ${overallTotal} MILESTONES`}
                 delay={0}
                 color="bg-black dark:bg-white"
+                isMain={true}
               />
-              <ProgressBar
-                label="TASKS_APPROVED"
-                pct={approvalPct}
-                detail={`${approvedDays} of ${totalDays} days`}
-                delay={0.15}
-                color="bg-green-600"
-              />
-              <ProgressBar
-                label="QUIZZES_COMPLETED"
-                pct={quizPct}
-                detail={`${quizCompleted} of ${totalDays} days`}
-                delay={0.3}
-                color="bg-black/50 dark:bg-white/50"
-              />
+              <div className="pt-4 border-t border-black/5 dark:border-white/5 space-y-7">
+                <ProgressBar
+                  label="TASKS_SUBMITTED"
+                  pct={submissionPct}
+                  detail={`${submittedDays} of ${totalDays} days`}
+                  delay={0.15}
+                  color="bg-black/60 dark:bg-white/60"
+                />
+                <ProgressBar
+                  label="TASKS_APPROVED"
+                  pct={approvalPct}
+                  detail={`${approvedDays} of ${totalDays} days`}
+                  delay={0.3}
+                  color="bg-green-600"
+                />
+                <ProgressBar
+                  label="QUIZZES_COMPLETED"
+                  pct={quizPct}
+                  detail={`${quizCompleted} of ${totalDays} days`}
+                  delay={0.45}
+                  color="bg-black/40 dark:bg-white/40"
+                />
+              </div>
             </div>
 
             {totalDays === 0 && (
@@ -120,16 +144,16 @@ export default function DashboardPage() {
   );
 }
 
-function ProgressBar({ label, pct, detail, delay, color }) {
+function ProgressBar({ label, pct, detail, delay, color, isMain = false }) {
   return (
     <div>
       <div className="flex justify-between items-baseline mb-1.5">
-        <span className="font-mono text-[10px] text-black/40 dark:text-white/40 tracking-wider uppercase">{label}</span>
+        <span className={`font-mono uppercase tracking-wider ${isMain ? 'text-xs text-black dark:text-white font-bold' : 'text-[10px] text-black/40 dark:text-white/40'}`}>{label}</span>
         <div className="flex items-baseline gap-2">
-          <span className="font-display font-black text-2xl text-black dark:text-white leading-none">{pct}%</span>
+          <span className={`font-display font-black text-black dark:text-white leading-none ${isMain ? 'text-4xl' : 'text-2xl'}`}>{pct}%</span>
         </div>
       </div>
-      <div className="h-[2px] w-full bg-black/5 dark:bg-white/5 rounded-full overflow-hidden mb-1">
+      <div className={`w-full bg-black/5 dark:bg-white/5 rounded-full overflow-hidden mb-1 ${isMain ? 'h-3' : 'h-[2px]'}`}>
         <motion.div
           initial={{ width: 0 }}
           animate={{ width: `${pct}%` }}

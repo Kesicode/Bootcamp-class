@@ -27,6 +27,8 @@ export default defineSchema({
     description: v.optional(v.string()),
     status: v.string(), // e.g. "active"
     order: v.number(),
+    unlockAt: v.optional(v.number()), // timestamp
+    deadlineAt: v.optional(v.number()), // timestamp
   }).index("by_order", ["order"]),
 
   days: defineTable({

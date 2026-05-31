@@ -47,7 +47,7 @@ export const getQuiz = query({
 });
 
 export const createWeek = mutation({
-  args: { title: v.string(), description: v.optional(v.string()), status: v.string(), order: v.number() },
+  args: { title: v.string(), description: v.optional(v.string()), status: v.string(), order: v.number(), unlockAt: v.optional(v.number()), deadlineAt: v.optional(v.number()) },
   handler: async (ctx, args) => {
     await checkAdmin(ctx);
     return await ctx.db.insert("weeks", args);
@@ -74,6 +74,8 @@ export const updateWeek = mutation({
     description: v.optional(v.string()),
     status: v.optional(v.string()),
     order: v.optional(v.number()),
+    unlockAt: v.optional(v.number()),
+    deadlineAt: v.optional(v.number()),
   },
   handler: async (ctx, args) => {
     await checkAdmin(ctx);

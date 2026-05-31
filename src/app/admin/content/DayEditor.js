@@ -139,31 +139,31 @@ export default function DayEditor({ dayId, onClose }) {
           <input type="text" value={formData.title} onChange={e => setFormData({...formData, title: e.target.value})} className={fieldClass} />
         </div>
         <div>
-          <label className="block font-mono text-[9px] tracking-[0.2em] text-black/40 uppercase mb-1.5">DESCRIPTION</label>
-          <textarea value={formData.description} onChange={e => setFormData({...formData, description: e.target.value})} rows={3} className={fieldClass} />
+          <label className="block font-mono text-[9px] tracking-[0.2em] text-black/40 dark:text-white/40 uppercase mb-1.5">DESCRIPTION</label>
+          <textarea value={formData.description} onChange={e => setFormData({...formData, description: e.target.value})} placeholder="Describe the day's topic..." rows={3} className={fieldClass} />
         </div>
         <div>
-          <label className="block font-mono text-[9px] tracking-[0.2em] text-black/40 uppercase mb-1.5">VIDEO_URL</label>
+          <label className="block font-mono text-[9px] tracking-[0.2em] text-black/40 dark:text-white/40 uppercase mb-1.5">VIDEO_URL</label>
           <input type="text" value={formData.videoUrl} onChange={e => setFormData({...formData, videoUrl: e.target.value})} placeholder="https://youtube.com/watch?v=..." className={fieldClass} />
         </div>
         <div>
-          <label className="block font-mono text-[9px] tracking-[0.2em] text-black/40 uppercase mb-1.5">TASK_DESCRIPTION (MARKDOWN)</label>
-          <textarea value={formData.taskDescription} onChange={e => setFormData({...formData, taskDescription: e.target.value})} rows={4} className={fieldClass} />
+          <label className="block font-mono text-[9px] tracking-[0.2em] text-black/40 dark:text-white/40 uppercase mb-1.5">TASK_DESCRIPTION (MARKDOWN)</label>
+          <textarea value={formData.taskDescription} onChange={e => setFormData({...formData, taskDescription: e.target.value})} placeholder="Describe the task using Markdown format..." rows={4} className={fieldClass} />
         </div>
       </div>
 
       {/* Access Control & Timing */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
         <div>
-          <label className="block font-mono text-[9px] tracking-[0.2em] text-black/40 uppercase mb-1.5">UNLOCK_AT</label>
+          <label className="block font-mono text-[9px] tracking-[0.2em] text-black/40 dark:text-white/40 uppercase mb-1.5">UNLOCK_AT</label>
           <input type="datetime-local" value={formData.unlockAtStr} onChange={e => setFormData({...formData, unlockAtStr: e.target.value})} className={fieldClass} />
         </div>
         <div>
-          <label className="block font-mono text-[9px] tracking-[0.2em] text-black/40 uppercase mb-1.5">PROPER_DEADLINE</label>
+          <label className="block font-mono text-[9px] tracking-[0.2em] text-black/40 dark:text-white/40 uppercase mb-1.5">PROPER_DEADLINE</label>
           <input type="datetime-local" value={formData.deadlineAtStr} onChange={e => setFormData({...formData, deadlineAtStr: e.target.value})} className={fieldClass} />
         </div>
         <div>
-          <label className="block font-mono text-[9px] tracking-[0.2em] text-black/40 uppercase mb-1.5">LATE_LOCK_DEADLINE</label>
+          <label className="block font-mono text-[9px] tracking-[0.2em] text-black/40 dark:text-white/40 uppercase mb-1.5">LATE_LOCK_DEADLINE</label>
           <input type="datetime-local" value={formData.lateDeadlineAtStr} onChange={e => setFormData({...formData, lateDeadlineAtStr: e.target.value})} className={fieldClass} />
         </div>
       </div>
@@ -171,19 +171,19 @@ export default function DayEditor({ dayId, onClose }) {
       {/* Scoring */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
         <div>
-          <label className="block font-mono text-[9px] tracking-[0.2em] text-black/40 uppercase mb-1.5">QUIZ_ON_TIME</label>
+          <label className="block font-mono text-[9px] tracking-[0.2em] text-black/40 dark:text-white/40 uppercase mb-1.5">QUIZ_ON_TIME</label>
           <input type="number" value={formData.quizPointsOnTime} onChange={e => setFormData({...formData, quizPointsOnTime: e.target.value})} className={fieldClass} />
         </div>
         <div>
-          <label className="block font-mono text-[9px] tracking-[0.2em] text-black/40 uppercase mb-1.5">QUIZ_LATE</label>
+          <label className="block font-mono text-[9px] tracking-[0.2em] text-black/40 dark:text-white/40 uppercase mb-1.5">QUIZ_LATE</label>
           <input type="number" value={formData.quizPointsLate} onChange={e => setFormData({...formData, quizPointsLate: e.target.value})} className={fieldClass} />
         </div>
         <div>
-          <label className="block font-mono text-[9px] tracking-[0.2em] text-black/40 uppercase mb-1.5">TASK_ON_TIME</label>
+          <label className="block font-mono text-[9px] tracking-[0.2em] text-black/40 dark:text-white/40 uppercase mb-1.5">TASK_ON_TIME</label>
           <input type="number" value={formData.taskPointsOnTime} onChange={e => setFormData({...formData, taskPointsOnTime: e.target.value})} className={fieldClass} />
         </div>
         <div>
-          <label className="block font-mono text-[9px] tracking-[0.2em] text-black/40 uppercase mb-1.5">TASK_LATE</label>
+          <label className="block font-mono text-[9px] tracking-[0.2em] text-black/40 dark:text-white/40 uppercase mb-1.5">TASK_LATE</label>
           <input type="number" value={formData.taskPointsLate} onChange={e => setFormData({...formData, taskPointsLate: e.target.value})} className={fieldClass} />
         </div>
       </div>
