@@ -115,10 +115,13 @@ export default function DayViewerPage() {
         </div>
       </div>
 
-      <div className="max-w-3xl mx-auto space-y-8">
+      <div className="max-w-5xl mx-auto space-y-8">
         
-        {/* 1. Video */}
-        {videoId && (
+        {/* Top Section: Video & Task Submission */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+          <div className="lg:col-span-2 flex flex-col justify-center">
+            {/* 1. Video */}
+            {videoId && (
           <div className="aspect-video rounded-xl overflow-hidden border border-black/[0.06] dark:border-white/[0.06] bg-black">
             <iframe
               src={`https://www.youtube.com/embed/${videoId}?rel=0&modestbranding=1`}
@@ -129,9 +132,11 @@ export default function DayViewerPage() {
             />
           </div>
         )}
+          </div>
 
-        {/* 2. Task Submission */}
-        <div className="border border-black/[0.06] dark:border-white/[0.06] rounded-xl p-6 bg-[#F8F9FA] dark:bg-[#111111]">
+          <div className="lg:col-span-1">
+            {/* 2. Task Submission */}
+            <div className="border border-black/[0.06] dark:border-white/[0.06] rounded-xl p-6 bg-[#F8F9FA] dark:bg-[#111111] h-full flex flex-col">
           <p className="font-mono text-[10px] tracking-[0.3em] text-black/30 dark:text-white/30 uppercase mb-2">
             {hasTask ? "TASK_SUBMISSION" : "NODE_COMPLETION"}
           </p>
@@ -273,9 +278,13 @@ export default function DayViewerPage() {
                 </form>
               </div>
             )}
+            </div>
+          </div>
         </div>
 
-        {/* 3. Lesson Brief */}
+        {/* Bottom Section */}
+        <div className="max-w-3xl mx-auto space-y-8">
+          {/* 3. Lesson Brief */}
         {day.description && (
           <div className="border border-black/[0.06] dark:border-white/[0.06] rounded-xl p-6 bg-[#F8F9FA] dark:bg-[#111111]">
             <p className="font-mono text-[10px] tracking-[0.3em] text-black/30 dark:text-white/30 uppercase mb-4">LESSON_BRIEF</p>
@@ -343,6 +352,7 @@ export default function DayViewerPage() {
             <p className="font-mono text-sm text-black/60 dark:text-white/60 leading-relaxed whitespace-pre-wrap">{day.taskDescription}</p>
           </div>
         )}
+        </div>
       </div>
     </motion.div>
   );
