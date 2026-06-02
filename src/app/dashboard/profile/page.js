@@ -83,7 +83,7 @@ function ProfileContent() {
   }
 
   const creationDate = user?._creationTime 
-    ? new Date(user._creationTime).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
+    ? new Date(user._creationTime).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' })
     : "Unknown";
 
   return (

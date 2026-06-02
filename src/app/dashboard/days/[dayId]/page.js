@@ -6,6 +6,7 @@ import { useParams } from "next/navigation";
 import Link from "next/link";
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
+import LinkifiedText from "@/components/LinkifiedText";
 
 export default function DayViewerPage() {
   const params = useParams();
@@ -138,7 +139,9 @@ export default function DayViewerPage() {
             {day.description && (
               <div className="border border-black/[0.06] dark:border-white/[0.06] rounded-xl p-6 bg-[#F8F9FA] dark:bg-[#111111]">
                 <p className="font-mono text-[10px] tracking-[0.3em] text-black/30 dark:text-white/30 uppercase mb-4">LESSON_BRIEF</p>
-                <p className="font-mono text-sm text-black/60 dark:text-white/60 leading-relaxed whitespace-pre-wrap">{day.description}</p>
+                <p className="font-mono text-sm text-black/60 dark:text-white/60 leading-relaxed whitespace-pre-wrap">
+                  <LinkifiedText>{day.description}</LinkifiedText>
+                </p>
               </div>
             )}
 
@@ -199,7 +202,9 @@ export default function DayViewerPage() {
             {day.taskDescription && (
               <div className="border border-black/[0.06] dark:border-white/[0.06] rounded-xl p-6 bg-[#F8F9FA] dark:bg-[#111111]">
                 <p className="font-mono text-[10px] tracking-[0.3em] text-black/30 dark:text-white/30 uppercase mb-4">TASK_BRIEF</p>
-                <p className="font-mono text-sm text-black/60 dark:text-white/60 leading-relaxed whitespace-pre-wrap">{day.taskDescription}</p>
+                <p className="font-mono text-sm text-black/60 dark:text-white/60 leading-relaxed whitespace-pre-wrap">
+                  <LinkifiedText>{day.taskDescription}</LinkifiedText>
+                </p>
               </div>
             )}
           </div>
@@ -258,7 +263,7 @@ export default function DayViewerPage() {
                 ) : isLockedBefore ? (
                   <div className="p-4 border border-blue-200 bg-blue-50 rounded-xl">
                     <p className="font-mono text-xs text-blue-600 font-bold uppercase mb-1">UPCOMING</p>
-                    <p className="font-mono text-[10px] text-blue-600/80 uppercase">Submissions will unlock at {new Date(day.unlockAt).toLocaleString()}.</p>
+                    <p className="font-mono text-[10px] text-blue-600/80 uppercase">Submissions will unlock at {new Date(day.unlockAt).toLocaleString('en-GB')}.</p>
                   </div>
                 ) : isLockedAfter ? (
                   <div className="p-4 border border-red-200 bg-red-50 rounded-xl">
