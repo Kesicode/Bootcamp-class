@@ -37,19 +37,21 @@ export default function DashboardPage() {
 
   const userName = user?.name || user?.email?.split('@')[0] || "USER";
   const totalDays = progress?.totalDays || 0;
+  const totalTasks = progress?.totalTasks || 0;
+  const totalQuizzes = progress?.totalQuizzes || 0;
   const submittedDays = progress?.submittedDays || 0;
   const approvedDays = progress?.approvedDays || 0;
   const quizCompleted = progress?.quizCompleted || 0;
 
-  const submissionPct = totalDays > 0 ? Math.round((submittedDays / totalDays) * 100) : 0;
-  const approvalPct = totalDays > 0 ? Math.round((approvedDays / totalDays) * 100) : 0;
-  const quizPct = totalDays > 0 ? Math.round((quizCompleted / totalDays) * 100) : 0;
+  const submissionPct = totalTasks > 0 ? Math.round((submittedDays / totalTasks) * 100) : 0;
+  const approvalPct = totalTasks > 0 ? Math.round((approvedDays / totalTasks) * 100) : 0;
+  const quizPct = totalQuizzes > 0 ? Math.round((quizCompleted / totalQuizzes) * 100) : 0;
 
   // Streak & Rank
   const streak = user?.streakCount || 0;
   const myRank = leaderboard ? leaderboard.findIndex(u => u._id === user?._id) + 1 : 0;
   
-  const pendingTasks = Math.max(0, totalDays - submittedDays);
+  const pendingTasks = progress?.activePendingTasks || 0;
 
   // Overall Journey
   const overallTotal = totalDays * 3;
@@ -80,9 +82,9 @@ export default function DashboardPage() {
       <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
         <StatCard label="STREAK_ACTIVE" value={streak} unit="DAYS" index={0} />
         <StatCard label="TASKS_PENDING" value={pendingTasks} unit="TASKS" index={1} />
-        <StatCard label="TASKS_SUBMITTED" value={submittedDays} unit={`/ ${totalDays}`} index={2} />
-        <StatCard label="TASKS_APPROVED" value={approvedDays} unit={`/ ${totalDays}`} index={3} />
-        <StatCard label="QUIZZES_DONE" value={quizCompleted} unit={`/ ${totalDays}`} index={4} />
+        <StatCard label="TASKS_SUBMITTED" value={submittedDays} unit={`/ ${totalTasks}`} index={2} />
+        <StatCard label="TASKS_APPROVED" value={approvedDays} unit={`/ ${totalTasks}`} index={3} />
+        <StatCard label="QUIZZES_DONE" value={quizCompleted} unit={`/ ${totalQuizzes}`} index={4} />
         <StatCard label="CURRENT_RANK" value={myRank > 0 ? myRank : "-"} unit={myRank > 0 ? `OF ${leaderboard?.length || 0}` : ""} index={5} />
       </div>
 
@@ -125,21 +127,21 @@ export default function DashboardPage() {
                 <ProgressBar
                   label="TASKS_SUBMITTED"
                   pct={submissionPct}
-                  detail={`${submittedDays} of ${totalDays} days`}
+                  detail={`${submittedDays} of ${totalTasks} tasks`}
                   delay={0.15}
                   color="bg-black/60 dark:bg-white/60"
                 />
                 <ProgressBar
                   label="TASKS_APPROVED"
                   pct={approvalPct}
-                  detail={`${approvedDays} of ${totalDays} days`}
+                  detail={`${approvedDays} of ${totalTasks} tasks`}
                   delay={0.3}
                   color="bg-green-600"
                 />
                 <ProgressBar
                   label="QUIZZES_COMPLETED"
                   pct={quizPct}
-                  detail={`${quizCompleted} of ${totalDays} days`}
+                  detail={`${quizCompleted} of ${totalQuizzes} quizzes`}
                   delay={0.45}
                   color="bg-black/40 dark:bg-white/40"
                 />

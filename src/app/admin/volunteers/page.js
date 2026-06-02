@@ -27,7 +27,15 @@ export default function VolunteersPage() {
     u.name?.toLowerCase().includes(searchTerm.toLowerCase()) || 
     u.email?.toLowerCase().includes(searchTerm.toLowerCase()) ||
     u.participantId?.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  ).sort((a, b) => {
+    if (selectedVolunteer) {
+      const aAssigned = a.assignedVolunteerId === selectedVolunteer._id;
+      const bAssigned = b.assignedVolunteerId === selectedVolunteer._id;
+      if (aAssigned && !bAssigned) return -1;
+      if (!aAssigned && bAssigned) return 1;
+    }
+    return (a.name || a.email || "").localeCompare(b.name || b.email || "");
+  });
 
   const totalPages = Math.ceil(filteredStudents.length / STUDENTS_PER_PAGE);
   const paginatedStudents = filteredStudents.slice((currentPage - 1) * STUDENTS_PER_PAGE, currentPage * STUDENTS_PER_PAGE);

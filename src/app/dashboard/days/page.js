@@ -5,6 +5,7 @@ import { api } from "../../../../convex/_generated/api";
 import Link from "next/link";
 import { Skeleton } from "../../../components/ui/skeleton";
 import { motion } from "framer-motion";
+import LinkifiedText from "@/components/LinkifiedText";
 
 export default function RoadmapPage() {
   const weeks = useQuery(api.content.getWeeks);
@@ -72,11 +73,13 @@ export default function RoadmapPage() {
                       <h3 className="text-2xl font-display font-black tracking-tighter uppercase text-black dark:text-white">{week.title}</h3>
                     </div>
                     <span className={`font-mono text-[9px] uppercase tracking-widest px-3 py-1.5 border rounded-full self-start ${isWeekLocked ? "border-orange-500/20 text-orange-500 bg-orange-500/5" : "border-black/10 dark:border-white/10 text-black/50 dark:text-white/50 bg-black/5 dark:bg-white/5"}`}>
-                      {isWeekLocked ? `UNLOCKS ${new Date(week.unlockAt).toLocaleDateString()}` : week.status}
+                      {isWeekLocked ? `UNLOCKS ${new Date(week.unlockAt).toLocaleDateString('en-GB')}` : week.status}
                     </span>
                   </div>
                   {week.description && (
-                    <p className="text-black/50 dark:text-white/50 text-sm font-mono leading-relaxed max-w-2xl">{week.description}</p>
+                    <p className="text-black/50 dark:text-white/50 text-sm font-mono leading-relaxed max-w-2xl">
+                      <LinkifiedText>{week.description}</LinkifiedText>
+                    </p>
                   )}
                 </div>
               </div>
@@ -149,7 +152,7 @@ function WeekDays({ weekId, isWeekLocked }) {
                   <span>DAY_{String(day.order).padStart(2, "0")}</span>
                   <span className="w-1 h-1 rounded-full bg-black/20 dark:bg-white/20"></span>
                   <span className={isLocked ? "text-orange-500" : "text-green-500"}>
-                    {isLocked ? (isWeekLocked ? `LOCKED BY WEEK` : `UNLOCKS ${new Date(day.unlockAt).toLocaleDateString()}`) : "ACTIVE_NODE"}
+                    {isLocked ? (isWeekLocked ? `LOCKED BY WEEK` : `UNLOCKS ${new Date(day.unlockAt).toLocaleDateString('en-GB')}`) : "ACTIVE_NODE"}
                   </span>
                 </div>
               </div>

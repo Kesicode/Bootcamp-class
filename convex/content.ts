@@ -195,16 +195,27 @@ export const getMyProgress = query({
       .collect();
 
     const activeDays = allDays.filter((d) => !d.deleted);
-    const totalDays = activeDays.length;
-    const submittedDays = mySubmissions.length;
-    const approvedDays = mySubmissions.filter((s) => s.status === "Approved").length;
-    const quizCompleted = myProgress.filter((p) => p.quizCompleted).length;
-
+    
     const allWeeks = await ctx.db.query("weeks").collect();
     const sortedWeeks = allWeeks.sort((a, b) => a.order - b.order);
     
-    let nextDayId = null;
     const now = Date.now();
+    let nextDayId = null;
+
+    const unlockedDays: any[] = [];
+    for (const week of sortedWeeks) {
+      if (week.unlockAt && now < week.unlockAt) continue;
+      const weekDays = activeDays.filter(d => d.weekId === week._id);
+      for (const day of weekDays) {
+        if (day.unlockAt && now < day.unlockAt) continue;
+        unlockedDays.push(day);
+      }
+    }
+
+    const totalDays = unlockedDays.length;
+    const submittedDays = mySubmissions.length;
+    const approvedDays = mySubmissions.filter((s) => s.status === "Approved").length;
+    const quizCompleted = myProgress.filter((p) => p.quizCompleted).length;
 
     for (const week of sortedWeeks) {
       if (week.unlockAt && now < week.unlockAt) continue;
@@ -228,26 +239,20 @@ export const getMyProgress = query({
     }
 
     let activePendingTasksCount = 0;
-    for (const week of sortedWeeks) {
-      if (week.unlockAt && now < week.unlockAt) continue;
+    for (const day of unlockedDays) {
+      if (day.lateDeadlineAt && now > day.lateDeadlineAt) continue; // Locked, so not "active pending"
       
-      const weekDays = activeDays.filter(d => d.weekId === week._id);
-      for (const day of weekDays) {
-        if (day.unlockAt && now < day.unlockAt) continue;
-        if (day.lateDeadlineAt && now > day.lateDeadlineAt) continue; // Locked, so not "active pending"
-        
-        if (day.taskDescription) {
-          const sub = mySubmissions.find(s => s.dayId === day._id);
-          if (!sub || sub.status === "Needs Revision") {
-            activePendingTasksCount++;
-          }
+      if (day.taskDescription) {
+        const sub = mySubmissions.find(s => s.dayId === day._id);
+        if (!sub || sub.status === "Needs Revision") {
+          activePendingTasksCount++;
         }
       }
     }
 
-    const totalTasks = activeDays.filter(d => !!d.taskDescription).length;
+    const totalTasks = unlockedDays.filter(d => !!d.taskDescription).length;
     const allQuizzes = await ctx.db.query("quizzes").collect();
-    const totalQuizzes = allQuizzes.filter(q => activeDays.some(d => d._id === q.dayId) && q.questions && q.questions.length > 0).length;
+    const totalQuizzes = allQuizzes.filter(q => unlockedDays.some(d => d._id === q.dayId) && q.questions && q.questions.length > 0).length;
 
     return { 
       totalDays, 
