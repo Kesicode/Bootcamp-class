@@ -56,6 +56,7 @@ export const listSubmissions = query({
         const maxPoints = sub.isLate ? (day?.taskPointsLate || 0) : (day?.taskPointsOnTime || 0);
         return Object.assign({}, sub, {
           userName: user?.name || user?.email || "Unknown User",
+          assignedVolunteerId: user?.assignedVolunteerId,
           dayTitle: day?.title || "Unknown Day",
           weekTitle: week?.title || "Unknown Week",
           weekOrder: week?.order ?? 999,
@@ -192,20 +193,23 @@ export const submitTask = mutation({
     if (existing) {
       // If we are auto-approving a re-submission or they re-submit after being locked, handled earlier.
       // We don't double award points if already awarded.
+      // Preserve "On Time" status (isLate = false) if they had submitted on time originally
+      const updatedIsLate = existing.isLate === false ? false : isLate;
+
       const shouldAwardNow = pointsAwarded && !existing.pointsAwarded;
       if (shouldAwardNow) {
         const user = await ctx.db.get(userId);
         if (user) {
-          const pointsToAdd = isLate ? (day.taskPointsLate || 0) : (day.taskPointsOnTime || 0);
+          const pointsToAdd = updatedIsLate ? (day.taskPointsLate || 0) : (day.taskPointsOnTime || 0);
           await ctx.db.patch(userId, { totalPoints: (user.totalPoints || 0) + pointsToAdd });
         }
       }
       return await ctx.db.patch(existing._id, { 
         link: args.link, 
-        isLate, 
+        isLate: updatedIsLate, 
         status: initialStatus,
         pointsAwarded: existing.pointsAwarded || shouldAwardNow,
-        ...(shouldAwardNow ? { awardedScore: isLate ? (day.taskPointsLate || 0) : (day.taskPointsOnTime || 0) } : {})
+        ...(shouldAwardNow ? { awardedScore: updatedIsLate ? (day.taskPointsLate || 0) : (day.taskPointsOnTime || 0) } : {})
       });
     }
 
