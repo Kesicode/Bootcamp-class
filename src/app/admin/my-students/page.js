@@ -1,11 +1,14 @@
 "use client";
 
+import { useState } from "react";
 import { useQuery } from "convex/react";
 import { api } from "../../../../convex/_generated/api";
 import { motion } from "framer-motion";
+import StudentDrawer from "../../../components/admin/StudentDrawer";
 
 export default function MyStudentsPage() {
   const myStudents = useQuery(api.users.getMyStudents);
+  const [selectedUserId, setSelectedUserId] = useState(null);
 
   if (myStudents === undefined) {
     return (
@@ -50,7 +53,8 @@ export default function MyStudentsPage() {
                   initial={{ opacity: 0 }}
                   animate={{ opacity: 1 }}
                   transition={{ delay: i * 0.03 }}
-                  className="border-b border-black/[0.04] dark:border-white/[0.04] last:border-0 hover:bg-[#F8F9FA] dark:hover:bg-[#111111] transition-colors"
+                  onClick={() => setSelectedUserId(u._id)}
+                  className="border-b border-black/[0.04] dark:border-white/[0.04] last:border-0 hover:bg-[#F8F9FA] dark:hover:bg-[#111111] transition-colors cursor-pointer"
                 >
                   <td className="px-5 py-4">
                     <p className="font-mono text-sm font-bold text-black dark:text-white">{u.name || "—"}</p>
@@ -84,7 +88,8 @@ export default function MyStudentsPage() {
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               transition={{ delay: i * 0.03 }}
-              className="p-5 hover:bg-[#F8F9FA] dark:hover:bg-[#111111] transition-colors"
+              onClick={() => setSelectedUserId(u._id)}
+              className="p-5 hover:bg-[#F8F9FA] dark:hover:bg-[#111111] transition-colors cursor-pointer"
             >
               <div className="flex flex-col gap-1 mb-3">
                 <p className="font-mono text-sm font-bold text-black dark:text-white uppercase">{u.name || "—"}</p>
@@ -105,6 +110,12 @@ export default function MyStudentsPage() {
           )}
         </div>
       </div>
+
+      <StudentDrawer 
+        isOpen={!!selectedUserId}
+        userId={selectedUserId} 
+        onClose={() => setSelectedUserId(null)} 
+      />
     </motion.div>
   );
 }
