@@ -558,13 +558,13 @@ export const migrateToCircutron = mutation({
         let newId = user.participantId;
         let newRole = user.role;
         
-        if (newId.startsWith("BUILDXADMIN-")) {
+        if (newId.startsWith("BUILDXADMIN-") || newId.startsWith("CIRCUTRONADMIN-")) {
           newId = newId.replace("BUILDXADMIN-", "CIRCUTRONADMIN-");
           newRole = "admin";
-        } else if (newId.startsWith("BUILDXVOL-")) {
+        } else if (newId.startsWith("BUILDXVOL-") || newId.startsWith("CIRCUTRONVOL-")) {
           newId = newId.replace("BUILDXVOL-", "CIRCUTRONVOL-");
           newRole = "volunteer";
-        } else if (newId.startsWith("BUILDX2026-")) {
+        } else if (newId.startsWith("BUILDX2026-") || newId.startsWith("CIRCUTRON2026-")) {
           newId = newId.replace("BUILDX2026-", "CIRCUTRON2026-");
           newRole = "student";
         }

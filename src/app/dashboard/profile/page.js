@@ -96,7 +96,7 @@ function ProfileContent() {
     >
       {/* Header */}
       <div className="border-b border-black/[0.06] dark:border-white/[0.06] pb-6 mb-6">
-        <p className="font-mono text-[10px] tracking-[0.3em] text-black/30 dark:text-white/30 uppercase mb-3">BUILDX // SYSTEM_SETTINGS</p>
+        <p className="font-mono text-[10px] tracking-[0.3em] text-black/30 dark:text-white/30 uppercase mb-3">CIRCUTRON // SYSTEM_SETTINGS</p>
         <h1 className="text-4xl font-display font-black tracking-tighter uppercase text-black dark:text-white">Profile.</h1>
         <p className="text-black/40 dark:text-white/40 mt-2 font-mono text-xs tracking-wider uppercase">
           MANAGE YOUR ACCOUNT SETTINGS AND VIEW HISTORY
@@ -121,7 +121,7 @@ function ProfileContent() {
               {user?.participantId || "NO_ID_ASSIGNED"}
             </p>
             <p className="text-xs text-black/50 dark:text-white/50 mb-8">
-              {user?.role === 'admin' ? 'Administrator' : user?.role === 'volunteer' ? 'Volunteer' : 'Student'}
+              {user?.role === 'admin' || user?.participantId?.includes('ADMIN') ? 'Administrator' : user?.role === 'volunteer' || user?.participantId?.includes('VOL') ? 'Volunteer' : 'Student'}
             </p>
 
             <div className="w-full flex justify-between text-xs border-t border-black/5 dark:border-white/5 pt-4 mb-2">
