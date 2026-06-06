@@ -45,7 +45,7 @@ async function assignIdForRole(ctx: any, targetUserId: any, newRole: string) {
   if (newRole === "admin") {
     let maxAdminId = 0;
     for (const u of allUsers) {
-      if (u.participantId && u.participantId.startsWith("BUILDXADMIN-")) {
+      if (u.participantId && u.participantId.startsWith("CIRCUTRONADMIN-")) {
         const numPart = parseInt(u.participantId.split("-")[1]);
         if (!isNaN(numPart) && numPart > maxAdminId) {
           maxAdminId = numPart;
@@ -53,12 +53,12 @@ async function assignIdForRole(ctx: any, targetUserId: any, newRole: string) {
       }
     }
     const nextNumber = maxAdminId + 1;
-    const newId = `BUILDXADMIN-${nextNumber.toString().padStart(3, '0')}`;
+    const newId = `CIRCUTRONADMIN-${nextNumber.toString().padStart(3, '0')}`;
     await ctx.db.patch(targetUserId, { participantId: newId });
   } else if (newRole === "volunteer") {
     let maxVolId = 0;
     for (const u of allUsers) {
-      if (u.participantId && u.participantId.startsWith("BUILDXVOL-")) {
+      if (u.participantId && u.participantId.startsWith("CIRCUTRONVOL-")) {
         const numPart = parseInt(u.participantId.split("-")[1]);
         if (!isNaN(numPart) && numPart > maxVolId) {
           maxVolId = numPart;
@@ -66,12 +66,12 @@ async function assignIdForRole(ctx: any, targetUserId: any, newRole: string) {
       }
     }
     const nextNumber = maxVolId + 1;
-    const newId = `BUILDXVOL-${nextNumber.toString().padStart(3, '0')}`;
+    const newId = `CIRCUTRONVOL-${nextNumber.toString().padStart(3, '0')}`;
     await ctx.db.patch(targetUserId, { participantId: newId });
   } else {
     let maxStudentId = 100;
     for (const u of allUsers) {
-      if (u.participantId && u.participantId.startsWith("BUILDX2026-")) {
+      if (u.participantId && u.participantId.startsWith("CIRCUTRON2026-")) {
         const numPart = parseInt(u.participantId.split("-")[1]);
         if (!isNaN(numPart) && numPart > maxStudentId) {
           maxStudentId = numPart;
@@ -79,7 +79,7 @@ async function assignIdForRole(ctx: any, targetUserId: any, newRole: string) {
       }
     }
     const nextNumber = maxStudentId + 1;
-    const newId = `BUILDX2026-${nextNumber}`;
+    const newId = `CIRCUTRON2026-${nextNumber}`;
     await ctx.db.patch(targetUserId, { participantId: newId });
   }
 }
@@ -183,22 +183,42 @@ export const getRecentActivity = query({
       .query("submissions")
       .withIndex("by_userId", (q) => q.eq("userId", userId))
       .order("desc")
-      .take(5);
+      .take(15);
 
-    // Map to a common activity format
-    const activities = await Promise.all(
-      submissions.map(async (sub) => {
-        const day = await ctx.db.get(sub.dayId);
-        return {
-          _id: sub._id,
-          type: "submission",
-          description: `Submitted ${day?.title || 'Task'}`,
-          timestamp: sub.submittedAt,
-        };
-      })
-    );
+    const activities = [];
 
-    return activities;
+    for (const sub of submissions) {
+      if (!sub.submittedAt) continue;
+      const day = await ctx.db.get(sub.dayId);
+      activities.push({
+        _id: `sub_${sub._id}`,
+        type: "submission",
+        description: `Submitted ${day?.title || 'Task'}`,
+        timestamp: sub.submittedAt,
+      });
+    }
+
+    // Fetch user's quiz progress
+    const progressDocs = await ctx.db
+      .query("userProgress")
+      .withIndex("by_userId", (q) => q.eq("userId", userId))
+      .order("desc")
+      .take(15);
+      
+    for (const prog of progressDocs) {
+      if (prog.quizCompleted) {
+        const day = await ctx.db.get(prog.dayId);
+        activities.push({
+          _id: `quiz_${prog._id}`,
+          type: "quiz",
+          description: `Completed Quiz for ${day?.title || 'Node'}`,
+          timestamp: prog._creationTime,
+        });
+      }
+    }
+
+    activities.sort((a, b) => b.timestamp - a.timestamp);
+    return activities.slice(0, 5);
   }
 });
 
@@ -525,5 +545,36 @@ export const getUserPointsBreakdown = query({
       },
       breakdown
     };
+  }
+});
+
+export const migrateToCircutron = mutation({
+  args: {},
+  handler: async (ctx) => {
+    const allUsers = await ctx.db.query("users").collect();
+    let updatedCount = 0;
+    for (const user of allUsers) {
+      if (user.participantId) {
+        let newId = user.participantId;
+        let newRole = user.role;
+        
+        if (newId.startsWith("BUILDXADMIN-")) {
+          newId = newId.replace("BUILDXADMIN-", "CIRCUTRONADMIN-");
+          newRole = "admin";
+        } else if (newId.startsWith("BUILDXVOL-")) {
+          newId = newId.replace("BUILDXVOL-", "CIRCUTRONVOL-");
+          newRole = "volunteer";
+        } else if (newId.startsWith("BUILDX2026-")) {
+          newId = newId.replace("BUILDX2026-", "CIRCUTRON2026-");
+          newRole = "student";
+        }
+
+        if (newId !== user.participantId || newRole !== user.role) {
+          await ctx.db.patch(user._id, { participantId: newId, role: newRole as any });
+          updatedCount++;
+        }
+      }
+    }
+    return updatedCount;
   }
 });
