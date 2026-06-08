@@ -207,30 +207,32 @@ export default function QuizResultsPage() {
                                           }
                                           
                                           return (
-                                            <div key={optIdx} className={`px-4 py-2.5 rounded-md border ${style} flex items-center justify-between`}>
-                                              <div className="flex items-center gap-3">
-                                                <span className={`font-mono text-[9px] font-bold tracking-widest ${isCorrect || isSelected ? 'opacity-100' : 'opacity-40'}`}>
+                                            <div key={optIdx} className={`px-4 py-3 rounded-md border ${style} flex flex-col gap-1.5`}>
+                                              <div className="flex items-start gap-3">
+                                                <span className={`font-mono text-[9px] font-bold tracking-widest mt-0.5 shrink-0 ${isCorrect || isSelected ? 'opacity-100' : 'opacity-40'}`}>
                                                   {String.fromCharCode(65 + optIdx)}
                                                 </span>
                                                 <span className="font-mono text-xs uppercase tracking-wide">{opt}</span>
                                               </div>
-                                              {isSelected && isCorrect && (
-                                                <span className="font-mono text-[8px] uppercase tracking-widest text-green-600 font-bold flex items-center gap-1">
-                                                  <svg className="w-3 h-3" viewBox="0 0 16 16" fill="none"><path d="M3 8l4 4 6-6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg>
-                                                  STUDENT SELECTED (CORRECT)
-                                                </span>
-                                              )}
-                                              {isSelected && !isCorrect && (
-                                                <span className="font-mono text-[8px] uppercase tracking-widest text-red-600 font-bold flex items-center gap-1">
-                                                  <svg className="w-3 h-3" viewBox="0 0 16 16" fill="none"><path d="M12 4L4 12M4 4l8 8" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg>
-                                                  STUDENT SELECTED (INCORRECT)
-                                                </span>
-                                              )}
-                                              {!isSelected && isCorrect && (
-                                                <span className="font-mono text-[8px] uppercase tracking-widest text-green-600/80 font-bold">
-                                                  CORRECT ANSWER
-                                                </span>
-                                              )}
+                                              <div className="pl-6">
+                                                {isSelected && isCorrect && (
+                                                  <span className="font-mono text-[8px] uppercase tracking-widest text-green-600 font-bold flex items-center gap-1.5">
+                                                    <svg className="w-3 h-3" viewBox="0 0 16 16" fill="none"><path d="M3 8l4 4 6-6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg>
+                                                    STUDENT SELECTED (CORRECT)
+                                                  </span>
+                                                )}
+                                                {isSelected && !isCorrect && (
+                                                  <span className="font-mono text-[8px] uppercase tracking-widest text-red-600 font-bold flex items-center gap-1.5">
+                                                    <svg className="w-3 h-3" viewBox="0 0 16 16" fill="none"><path d="M12 4L4 12M4 4l8 8" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg>
+                                                    STUDENT SELECTED (INCORRECT)
+                                                  </span>
+                                                )}
+                                                {!isSelected && isCorrect && (
+                                                  <span className="font-mono text-[8px] uppercase tracking-widest text-green-600/80 font-bold">
+                                                    CORRECT ANSWER
+                                                  </span>
+                                                )}
+                                              </div>
                                             </div>
                                           );
                                         })}
