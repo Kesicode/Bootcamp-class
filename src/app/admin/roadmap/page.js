@@ -123,7 +123,7 @@ function WeekDays({ weekId, isWeekLocked }) {
         
         return (
           <Link 
-            href={isLocked ? "#" : `/dashboard/days/${day._id}`} 
+            href={isLocked ? "#" : `/admin/roadmap/${day._id}`}
             key={day._id}
             className={`flex flex-col md:flex-row md:items-center justify-between p-5 rounded-xl border border-black/[0.06] dark:border-white/[0.06] transition-all group bg-white dark:bg-[#0a0a0a] relative overflow-hidden ${
               isLocked 

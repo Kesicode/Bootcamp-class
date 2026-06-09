@@ -1,9 +1,11 @@
 "use client";
 
 import AppSidebar from "@/components/AppSidebar";
-import { useQuery } from "convex/react";
+import { useQuery, useMutation } from "convex/react";
 import { api } from "../../convex/_generated/api";
 import Link from "next/link";
+import { useEffect } from "react";
+import { useAuthActions } from "@convex-dev/auth/react";
 
 /**
  * Purpose:
@@ -13,6 +15,24 @@ import Link from "next/link";
  */
 export default function DashboardSidebarClient() {
   const user = useQuery(api.users.current);
+  const generateParticipantId = useMutation(api.users.generateParticipantId);
+  const { signOut } = useAuthActions();
+
+  useEffect(() => {
+    // If the Convex session is invalid/deleted but Next.js cookie remains,
+    // user will be null. Force sign out to clear the cookie and redirect.
+    if (user === null) {
+      signOut().then(() => {
+        window.location.href = "/login";
+      });
+      return;
+    }
+
+    // Only assign ID if the user is loaded and doesn't have an ID
+    if (user && !user.participantId) {
+      generateParticipantId().catch(console.error);
+    }
+  }, [user, generateParticipantId, signOut]);
 
   const navItems = [
     {
@@ -36,10 +56,30 @@ export default function DashboardSidebarClient() {
         </svg>
       ),
     },
+    {
+      href: "/dashboard/leaderboard",
+      label: "LEADERBOARD",
+      icon: (
+        <svg className="w-4 h-4" viewBox="0 0 16 16" fill="none">
+          <path d="M5 14V6m6 8V2m-3 12V9" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+        </svg>
+      ),
+    },
+    {
+      href: "/dashboard/profile",
+      label: "PROFILE",
+      icon: (
+        <svg className="w-4 h-4" viewBox="0 0 16 16" fill="none">
+          <path d="M8 11A3.5 3.5 0 108 4a3.5 3.5 0 000 7zM4.5 15C4.5 12.5 6 11 8 11s3.5 1.5 3.5 4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+        </svg>
+      ),
+    },
   ];
 
-  // Inject admin portal link as topSection if user is admin
-  const adminSection = (user?.role === "admin")
+  // Inject staff/admin portal link as topSection if user has access
+  const hasStaffAccess = user?.role === "admin" || user?.role === "volunteer";
+  const portalName = user?.role === "admin" ? "ADMIN_PORTAL" : "STAFF_PORTAL";
+  const adminSection = hasStaffAccess
     ? (open) => open ? (
         <div>
           <p className="text-[9px] font-mono tracking-[0.3em] text-black/25 uppercase px-2 pb-2">MANAGEMENT</p>
@@ -50,11 +90,11 @@ export default function DashboardSidebarClient() {
             <svg className="w-4 h-4 shrink-0" viewBox="0 0 16 16" fill="none">
               <path d="M8 1L14 4v4c0 3.5-2.5 6-6 7C2.5 14 0 11.5 0 8V4L8 1z" stroke="currentColor" strokeWidth="1.5" strokeLinejoin="round"/>
             </svg>
-            ADMIN_PORTAL
+            {portalName}
           </Link>
         </div>
       ) : (
-        <Link href="/admin" title="Admin Portal" className="flex justify-center py-2.5 rounded-lg hover:bg-black/5 dark:hover:bg-white/5 transition-colors">
+        <Link href="/admin" title={portalName} className="flex justify-center py-2.5 rounded-lg hover:bg-black/5 dark:hover:bg-white/5 transition-colors">
           <svg className="w-4 h-4 text-black/30 dark:text-white/30 hover:text-black dark:hover:text-white" viewBox="0 0 16 16" fill="none">
             <path d="M8 1L14 4v4c0 3.5-2.5 6-6 7C2.5 14 0 11.5 0 8V4L8 1z" stroke="currentColor" strokeWidth="1.5" strokeLinejoin="round"/>
           </svg>

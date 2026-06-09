@@ -2,10 +2,11 @@
 
 import { useQuery, useMutation } from "convex/react";
 import { api } from "../../../../convex/_generated/api";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { motion } from "framer-motion";
+import { motion, Reorder } from "framer-motion";
 import DayEditor from "./DayEditor";
+import WeekEditor from "./WeekEditor";
 
 /**
  * Purpose:
@@ -31,19 +32,58 @@ export default function ContentPage() {
   const [newWeekTitle, setNewWeekTitle] = useState("");
   const [selectedWeek, setSelectedWeek] = useState(null);
   const [editingDayId, setEditingDayId] = useState(null);
+  const [editingWeekId, setEditingWeekId] = useState(null);
   
-  const days = useQuery(api.content.getDays, { weekId: selectedWeek === null ? undefined : selectedWeek }) || [];
+  const rawDays = useQuery(api.content.getDays, { weekId: selectedWeek === null ? undefined : selectedWeek });
+  const days = rawDays || [];
+  const reorderDays = useMutation(api.content.reorderDays);
+
+  const [localDays, setLocalDays] = useState([]);
+  
+  useEffect(() => {
+    if (rawDays) {
+      setLocalDays([...rawDays].sort((a,b) => (a.order || 0) - (b.order || 0)));
+    } else {
+      setLocalDays([]);
+    }
+  }, [rawDays]);
+
+  const handleReorderEnd = async () => {
+    const updates = localDays.map((d, idx) => ({ dayId: d._id, order: idx + 1 }));
+    let changed = false;
+    for (const update of updates) {
+      const originalDay = days.find(d => d._id === update.dayId);
+      if (originalDay && originalDay.order !== update.order) {
+        changed = true; break;
+      }
+    }
+    if (changed) {
+      try {
+        await reorderDays({ updates });
+      } catch (err) {
+        alert("Failed to save order: " + err.message);
+      }
+    }
+  };
 
   const handleCreateWeek = async (e) => {
     e.preventDefault();
     if (!newWeekTitle.trim()) return;
-    await createWeek({ title: newWeekTitle, status: "active", order: weeks.length + 1 });
-    setNewWeekTitle("");
+    try {
+      await createWeek({ title: newWeekTitle, status: "active", order: weeks.length + 1 });
+      setNewWeekTitle("");
+    } catch (err) {
+      alert("Failed to create week: " + err.message);
+    }
   };
 
   const handleCreateDay = async () => {
     if (!selectedWeek) return;
-    await createDay({ weekId: selectedWeek, title: "New Day", order: days.length + 1 });
+    try {
+      await createDay({ weekId: selectedWeek, title: "New Day", order: days.length + 1 });
+    } catch (err) {
+      alert("Failed to create day: " + err.message);
+    }
   };
 
   return (
@@ -75,6 +115,7 @@ export default function ContentPage() {
               value={newWeekTitle}
               onChange={(e) => setNewWeekTitle(e.target.value)}
               placeholder="Week title e.g. Week 1 — Foundations"
+              required
               className="flex-1 border border-black/[0.12] dark:border-white/[0.12] rounded-lg px-4 py-2.5 font-mono text-sm outline-none focus:border-black dark:focus:border-white transition-colors bg-white dark:bg-[#0a0a0a] text-black dark:text-white placeholder:text-black/20 dark:placeholder:text-white/20"
             />
             <button
@@ -97,7 +138,11 @@ export default function ContentPage() {
                     ? "bg-black dark:bg-white border-black dark:border-white"
                     : "bg-[#F8F9FA] dark:bg-[#111111] border-black/[0.06] dark:border-white/[0.06] hover:border-black/20 dark:hover:border-white/20"
                 }`}
-                onClick={() => { setSelectedWeek(week._id); setEditingDayId(null); }}
+                onClick={() => { 
+                  setSelectedWeek(week._id); 
+                  setEditingDayId(null); 
+                  setEditingWeekId(null); 
+                }}
               >
                 <div>
                   <p className={`font-mono text-[9px] tracking-[0.2em] uppercase mb-0.5 ${selectedWeek === week._id ? "text-white/50 dark:text-black/50" : "text-black/30 dark:text-white/30"}`}>
@@ -110,22 +155,39 @@ export default function ContentPage() {
                     STATUS: {week.status?.toUpperCase()}
                   </p>
                 </div>
-                <button
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    if (confirm("Delete this week and all its days?")) {
-                      deleteWeek({ weekId: week._id });
-                      if (selectedWeek === week._id) setSelectedWeek(null);
-                    }
-                  }}
-                  className={`p-2 rounded-lg transition-colors opacity-0 group-hover:opacity-100 ${
-                    selectedWeek === week._id ? "hover:bg-white/10 dark:hover:bg-black/10 text-white/60 dark:text-black/60 hover:text-white dark:hover:text-black" : "hover:bg-red-50 dark:hover:bg-red-900/30 text-black/30 dark:text-white/30 hover:text-red-600 dark:hover:text-red-400"
-                  }`}
-                >
-                  <svg className="w-4 h-4" viewBox="0 0 16 16" fill="none">
-                    <path d="M3 4h10M6 4V2h4v2M6 7v5M10 7v5M4 4l.5 9h7l.5-9" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
-                  </svg>
-                </button>
+                <div className="flex items-center gap-1">
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setSelectedWeek(week._id);
+                      setEditingWeekId(week._id);
+                      setEditingDayId(null);
+                    }}
+                    className={`font-mono text-[9px] uppercase tracking-wider px-2.5 py-1.5 rounded border transition-all opacity-0 group-hover:opacity-100 ${
+                      selectedWeek === week._id 
+                        ? "border-white/20 dark:border-black/20 hover:bg-white/10 dark:hover:bg-black/10 text-white/80 dark:text-black/80" 
+                        : "border-black/[0.08] dark:border-white/[0.08] hover:bg-black dark:hover:bg-white text-black/60 dark:text-white/60 hover:text-white dark:hover:text-black"
+                    }`}
+                  >
+                    EDIT
+                  </button>
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      if (confirm("Delete this week and all its days?")) {
+                        deleteWeek({ weekId: week._id });
+                        if (selectedWeek === week._id) setSelectedWeek(null);
+                      }
+                    }}
+                    className={`p-2 rounded-lg transition-colors opacity-0 group-hover:opacity-100 ${
+                      selectedWeek === week._id ? "hover:bg-white/10 dark:hover:bg-black/10 text-white/60 dark:text-black/60 hover:text-white dark:hover:text-black" : "hover:bg-red-50 dark:hover:bg-red-900/30 text-black/30 dark:text-white/30 hover:text-red-600 dark:hover:text-red-400"
+                    }`}
+                  >
+                    <svg className="w-4 h-4" viewBox="0 0 16 16" fill="none">
+                      <path d="M3 4h10M6 4V2h4v2M6 7v5M10 7v5M4 4l.5 9h7l.5-9" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                    </svg>
+                  </button>
+                </div>
               </div>
             ))}
             {weeks.length === 0 && (
@@ -157,20 +219,31 @@ export default function ContentPage() {
             <div className="py-16 text-center border border-dashed border-black/10 dark:border-white/10 rounded-xl">
               <p className="font-mono text-[10px] tracking-widest text-black/25 dark:text-white/25 uppercase">SELECT_CLUSTER // TO VIEW DAYS</p>
             </div>
+          ) : editingWeekId ? (
+            <WeekEditor weekId={editingWeekId} onClose={() => setEditingWeekId(null)} />
           ) : editingDayId ? (
             <DayEditor dayId={editingDayId} onClose={() => setEditingDayId(null)} />
           ) : (
-            <div className="space-y-2">
-              {days.map((day, idx) => (
-                <div
+            <Reorder.Group axis="y" values={localDays} onReorder={setLocalDays} className="space-y-2">
+              {localDays.map((day, idx) => (
+                <Reorder.Item
                   key={day._id}
-                  className="p-4 rounded-xl border border-black/[0.06] dark:border-white/[0.06] bg-[#F8F9FA] dark:bg-[#111111] flex justify-between items-center group hover:border-black/20 dark:hover:border-white/20 transition-all"
+                  value={day}
+                  onDragEnd={handleReorderEnd}
+                  className="p-4 rounded-xl border border-black/[0.06] dark:border-white/[0.06] bg-[#F8F9FA] dark:bg-[#111111] flex justify-between items-center group hover:border-black/20 dark:hover:border-white/20 transition-all cursor-grab active:cursor-grabbing relative bg-white dark:bg-[#0a0a0a]"
                 >
-                  <div>
-                    <p className="font-mono text-[9px] tracking-[0.2em] text-black/30 dark:text-white/30 uppercase mb-0.5">
-                      DAY_{String(day.order).padStart(2, "0")}
-                    </p>
-                    <p className="font-mono text-sm font-bold text-black dark:text-white uppercase tracking-wider">{day.title}</p>
+                  <div className="flex items-center gap-4">
+                    <div className="text-black/20 dark:text-white/20 cursor-grab active:cursor-grabbing">
+                      <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none">
+                        <path d="M8 9h8M8 15h8" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
+                      </svg>
+                    </div>
+                    <div>
+                      <p className="font-mono text-[9px] tracking-[0.2em] text-black/30 dark:text-white/30 uppercase mb-0.5">
+                        DAY_{String(idx + 1).padStart(2, "0")}
+                      </p>
+                      <p className="font-mono text-sm font-bold text-black dark:text-white uppercase tracking-wider">{day.title}</p>
+                    </div>
                   </div>
                   <button
                     onClick={() => setEditingDayId(day._id)}
@@ -178,14 +251,14 @@ export default function ContentPage() {
                   >
                     EDIT
                   </button>
-                </div>
+                </Reorder.Item>
               ))}
               {days.length === 0 && (
                 <div className="py-10 text-center border border-dashed border-black/10 dark:border-white/10 rounded-xl">
                   <p className="font-mono text-[10px] tracking-widest text-black/25 dark:text-white/25 uppercase">NO_DAYS // ADD ABOVE</p>
                 </div>
               )}
-            </div>
+            </Reorder.Group>
           )}
         </div>
       </div>

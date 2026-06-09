@@ -11,7 +11,8 @@
 import type * as auth from "../auth.js";
 import type * as content from "../content.js";
 import type * as http from "../http.js";
-import type * as reset from "../reset.js";
+import type * as password from "../password.js";
+import type * as recalculatePoints from "../recalculatePoints.js";
 import type * as submissions from "../submissions.js";
 import type * as users from "../users.js";
 
@@ -25,7 +26,8 @@ declare const fullApi: ApiFromModules<{
   auth: typeof auth;
   content: typeof content;
   http: typeof http;
-  reset: typeof reset;
+  password: typeof password;
+  recalculatePoints: typeof recalculatePoints;
   submissions: typeof submissions;
   users: typeof users;
 }>;
