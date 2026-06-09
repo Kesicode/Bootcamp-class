@@ -54,16 +54,20 @@ export default function LoginPage() {
     setError("");
 
     try {
+      const sanitizedEmail = email.trim().toLowerCase();
+      const sanitizedPassword = password.trim();
+      const sanitizedConfirm = confirmPassword.trim();
+
       if (step === "login") {
-        await signIn("password", { email, password, flow: "signIn" });
+        await signIn("password", { email: sanitizedEmail, password: sanitizedPassword, flow: "signIn" });
         router.push("/dashboard");
       } else {
-        if (password !== confirmPassword) {
+        if (sanitizedPassword !== sanitizedConfirm) {
           setError("Passwords do not match.");
           setLoading(false);
           return;
         }
-        await signIn("password", { email, password, flow: "signUp" });
+        await signIn("password", { email: sanitizedEmail, password: sanitizedPassword, flow: "signUp" });
         router.push("/dashboard");
       }
     } catch (err) {
