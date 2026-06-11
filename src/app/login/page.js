@@ -55,8 +55,8 @@ export default function LoginPage() {
 
     try {
       const sanitizedEmail = email.trim().toLowerCase();
-      const sanitizedPassword = password.trim();
-      const sanitizedConfirm = confirmPassword.trim();
+      const sanitizedPassword = password;
+      const sanitizedConfirm = confirmPassword;
 
       if (step === "login") {
         await signIn("password", { email: sanitizedEmail, password: sanitizedPassword, flow: "signIn" });
