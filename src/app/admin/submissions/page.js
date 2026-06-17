@@ -213,11 +213,14 @@ export default function SubmissionsPage() {
                   className="border-b border-black/[0.04] dark:border-white/[0.04] last:border-0 hover:bg-[#F8F9FA] dark:hover:bg-[#111111] transition-colors"
                 >
                   <td className="px-5 py-4">
-                    <span className="font-mono text-sm font-bold text-black dark:text-white uppercase tracking-wider">{sub.userName}</span>
+                    <span className="font-mono text-sm font-bold text-black dark:text-white uppercase tracking-wider block mb-0.5">{sub.userName}</span>
+                    <span suppressHydrationWarning className="font-mono text-[10px] text-black/40 dark:text-white/40 uppercase tracking-widest block">
+                      {sub.submittedAt || sub._creationTime ? new Date(sub.submittedAt || sub._creationTime).toLocaleString(undefined, { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' }) : "NO TIMESTAMP"}
+                    </span>
                   </td>
                   <td className="px-5 py-4">
                     <span className="font-mono text-[10px] text-black/40 dark:text-white/40 uppercase tracking-widest block mb-0.5">{sub.weekTitle}</span>
-                    <span className="font-mono text-xs text-black/80 dark:text-white/80">{sub.dayTitle}</span>
+                    <span className="font-mono text-xs text-black/80 dark:text-white/80 block">{sub.dayTitle}</span>
                   </td>
                   <td className="px-5 py-4">
                     {sub.link ? (
@@ -363,8 +366,13 @@ export default function SubmissionsPage() {
               className="p-5 hover:bg-[#F8F9FA] dark:hover:bg-[#111111] transition-colors"
             >
               <div className="flex justify-between items-start mb-3">
-                <span className="font-mono text-sm font-bold text-black dark:text-white uppercase tracking-wider">{sub.userName}</span>
-                <span className={`inline-block font-mono text-[8px] uppercase tracking-widest px-2 py-1 border rounded-full ${statusColor(sub.status)}`}>
+                <div>
+                  <span className="font-mono text-sm font-bold text-black dark:text-white uppercase tracking-wider block mb-0.5">{sub.userName}</span>
+                  <span suppressHydrationWarning className="font-mono text-[10px] text-black/40 dark:text-white/40 uppercase tracking-widest block">
+                    {sub.submittedAt || sub._creationTime ? new Date(sub.submittedAt || sub._creationTime).toLocaleString(undefined, { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' }) : "NO TIMESTAMP"}
+                  </span>
+                </div>
+                <span className={`inline-block font-mono text-[8px] uppercase tracking-widest px-2 py-1 border rounded-full ${statusColor(sub.status)} mt-0.5`}>
                   {sub.status || "PENDING"}
                 </span>
               </div>

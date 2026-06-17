@@ -2,6 +2,8 @@
 
 import { useState, useEffect } from "react";
 import { useAuthActions } from "@convex-dev/auth/react";
+import { useConvex } from "convex/react";
+import { api } from "../../../convex/_generated/api";
 import { useRouter } from "next/navigation";
 import { Loader2, ArrowRight, Eye, EyeOff } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
@@ -26,6 +28,7 @@ export default function LoginPage() {
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
   const { signIn } = useAuthActions();
+  const convex = useConvex();
   const router = useRouter();
 
   // Mouse tracking logic for biometric eyes
@@ -54,20 +57,44 @@ export default function LoginPage() {
     setError("");
 
     try {
+      const sanitizedEmail = email.trim().toLowerCase();
+      const sanitizedPassword = password;
+      const sanitizedConfirm = confirmPassword;
+
       if (step === "login") {
-        await signIn("password", { email, password, flow: "signIn" });
+        await signIn("password", { email: sanitizedEmail, password: sanitizedPassword, flow: "signIn" });
         router.push("/dashboard");
       } else {
-        if (password !== confirmPassword) {
+        if (sanitizedPassword !== sanitizedConfirm) {
           setError("Passwords do not match.");
           setLoading(false);
           return;
         }
-        await signIn("password", { email, password, flow: "signUp" });
+        await signIn("password", { email: sanitizedEmail, password: sanitizedPassword, flow: "signUp" });
         router.push("/dashboard");
       }
     } catch (err) {
-      setError(step === "login" ? "Invalid credentials." : "Failed to register.");
+      console.error("Login Error:", err);
+      if (step === "login") {
+        try {
+          const emailExists = await convex.query(api.users.checkEmailExists, { email: email.trim().toLowerCase() });
+          if (!emailExists) {
+            setError("Invalid email address.");
+          } else {
+            // If the email exists, it's usually a password mismatch.
+            // But if there's a different error (like network failure), we can display it.
+            if (err.message && !err.message.toLowerCase().includes("invalid")) {
+              setError(`Error: ${err.message}`);
+            } else {
+              setError("Invalid password.");
+            }
+          }
+        } catch (fallbackErr) {
+          setError("A network or server error occurred. Please try again.");
+        }
+      } else {
+        setError(err.message ? `Registration failed: ${err.message}` : "Failed to register.");
+      }
     } finally {
       setLoading(false);
     }
@@ -249,6 +276,10 @@ export default function LoginPage() {
                         onChange={(e) => setEmail(e.target.value)}
                         className="w-full bg-transparent border-b border-gray-200 dark:border-white/20 focus:border-black dark:focus:border-white outline-none px-0 py-3 text-black dark:text-white placeholder:text-gray-300 dark:placeholder:text-gray-600 transition-colors text-lg font-medium font-mono"
                         placeholder="student@university.edu"
+                        autoComplete="email"
+                        autoCapitalize="none"
+                        autoCorrect="off"
+                        spellCheck="false"
                         required
                       />
                     </div>
@@ -264,6 +295,10 @@ export default function LoginPage() {
                           onChange={(e) => setPassword(e.target.value)}
                           className="w-full bg-transparent border-b border-gray-200 dark:border-white/20 focus:border-black dark:focus:border-white outline-none px-0 py-3 pr-10 text-black dark:text-white placeholder:text-gray-300 dark:placeholder:text-gray-600 transition-colors text-lg font-medium font-mono"
                           placeholder="••••••••"
+                          autoComplete="current-password"
+                          autoCapitalize="none"
+                          autoCorrect="off"
+                          spellCheck="false"
                           required
                         />
                         <button
@@ -337,6 +372,10 @@ export default function LoginPage() {
                         onChange={(e) => setEmail(e.target.value)}
                         className="w-full bg-transparent border-b border-gray-200 dark:border-white/20 focus:border-black dark:focus:border-white outline-none px-0 py-3 text-black dark:text-white placeholder:text-gray-300 dark:placeholder:text-gray-600 transition-colors text-lg font-medium font-mono"
                         placeholder="architect@circuitron.net"
+                        autoComplete="email"
+                        autoCapitalize="none"
+                        autoCorrect="off"
+                        spellCheck="false"
                         required
                       />
                     </div>
@@ -375,6 +414,10 @@ export default function LoginPage() {
                           onChange={(e) => setConfirmPassword(e.target.value)}
                           className="w-full bg-transparent border-b border-gray-200 dark:border-white/20 focus:border-black dark:focus:border-white outline-none px-0 py-3 pr-10 text-black dark:text-white placeholder:text-gray-300 dark:placeholder:text-gray-600 transition-colors text-lg font-medium font-mono"
                           placeholder="••••••••"
+                          autoComplete="new-password"
+                          autoCapitalize="none"
+                          autoCorrect="off"
+                          spellCheck="false"
                           required
                         />
                         <button
